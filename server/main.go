@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net"
 	"os"
@@ -34,7 +33,5 @@ func main() {
 	port := config.GetServerById(config.GetLocalServerNumber()).Port
 	addr, _ := net.ResolveUDPAddr("udp", "localhost:" + strconv.FormatUint(uint64(port), 10))
 
-	fmt.Println("STARTING) Connecting to neighbors...")
 	network.WaitNetwork(addr)
-	fmt.Println("STARTING) All neighbors connected...")
 }
