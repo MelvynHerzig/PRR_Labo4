@@ -5,6 +5,7 @@ import (
 	"net"
 	"os"
 	"prr.configuration/config"
+	"server/algorithms/wave"
 	"server/network"
 	"strconv"
 )
@@ -34,4 +35,11 @@ func main() {
 	addr, _ := net.ResolveUDPAddr("udp", "localhost:" + strconv.FormatUint(uint64(port), 10))
 
 	network.WaitNetwork(addr)
+
+	// Init algorithms
+	wave.Init()
+
+	// Handle incoming messages
+	go network.Handle(addr)
+	wave.Handle()
 }

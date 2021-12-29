@@ -5,12 +5,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a7fcdf9d-4c73-46ce-821f-5460a2c94ff9" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/../server/network/setup.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/PRR_Labo4.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/modules.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/vcs.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../go.mod" beforeDir="false" />
+      <change afterPath="$PROJECT_DIR$/../client/main.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../server/algorithms/wave/handle.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../server/algorithms/wave/impl.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../server/algorithms/wave/seriliazation.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../server/network/communication.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../client/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/../client/go.mod" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../config.json" beforeDir="false" afterPath="$PROJECT_DIR$/../config.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../server/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../server/network/setup.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/network/setup.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

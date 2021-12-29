@@ -5,7 +5,6 @@ import (
 	"log"
 	"net"
 	"prr.configuration/config"
-	"sort"
 	"strings"
 	"time"
 )
@@ -23,8 +22,8 @@ const (
 	signalReceived = "ACK"
 )
 
-// Array of all neighbors connections.
-var neighborsConn [] net.Conn
+// neighbors is a map that stores (UDP) connections to neighbors
+var neighbors = make(map[uint]net.Conn)
 
 // WaitNetwork is a blocking function that wait for network initialisation.
 // In a first approach, we simulate a fake tree graph where a node m is connected to m-1.
@@ -62,10 +61,17 @@ func WaitNetwork(socket *net.UDPAddr) {
 
 	// Step 2 now we forget the fake tree. We get our real neighbors and make a connection
 	neighborsId := config.GetNeighbors(localNumber)
-	neighborsConn = make([]net.Conn, len(neighborsId))
 
-	// Sorting neighbors ids
-	sort.Slice(neighborsId, func(i, j int) bool { return neighborsId[i] < neighborsId[j] })
+	for _, v := range neighborsId {
+		neighbor := config.GetServerById(v)
+		neighborAddr := fmt.Sprintf("%v:%v", neighbor.Ip, neighbor.Port)
+
+		neighborConn, neighborErr := net.Dial("udp", neighborAddr)
+		if neighborErr != nil {
+			log.Fatal(neighborErr)
+		}
+		neighbors[v] = neighborConn
+	}
 
 	fmt.Println("STARTING) All neighbors connected...")
 }
