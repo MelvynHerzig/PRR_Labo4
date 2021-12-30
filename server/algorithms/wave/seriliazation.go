@@ -2,6 +2,7 @@ package wave
 
 import (
 	"fmt"
+	"server/algorithms"
 	"strconv"
 	"strings"
 )
@@ -15,10 +16,10 @@ type message struct {
 }
 
 // serialize translate a message into a string
-// For example, if the server src is 2, it is active, it is at the 4th round and the matrix is [0, 1, 0]
-//																							   [1, 0, 1]
-//																							   [0, 1, 0]
-// The string will be: "0-1-0_1-0-1_0-1-0 2 4 1" (i.e <matrix> <src num> <wave num> <active true= 1 false = 0>)
+// For example, if the server src is 2, it is active, it is at the 4th round and the matrix is [false, true, false]
+//																							   [true, false, true]
+//																							   [false, true, false]
+// The string will be: "0-1-0_1-0-1_0-1-0 2 4 1" (i.e <matrix true=1, false = 0> <src num> <wave num> <active true= 1 false = 0>)
 func serialize(m *message) string {
 
 	// Topology
@@ -51,16 +52,16 @@ func serialize(m *message) string {
 }
 
 // deserialize translate a string into a message. If the string is not well-formed, the program will crash
-// For example, if the server src is 2, it is active, it is at the 4th round and the matrix is [0, 1, 0]
-//																							   [1, 0, 1]
-//																							   [0, 1, 0]
-// The string must be: "0-1-0_1-0-1_0-1-0 2 4 1" (i.e <matrix> <src num> <wave num> <active true= 1 false = 0>)
+// For example, if the server src is 2, it is active, it is at the 4th round and the matrix is [false, true, false]
+//																							   [true, false, true]
+//																							   [false, true, false]
+// The string must be: "0-1-0_1-0-1_0-1-0 2 4 1" (i.e <matrix true=1, false = 0> <src num> <wave num> <active true= 1 false = 0>)
 func deserialize(s string) message {
 	var m message
 	var topology [][]bool
-	topology = make([][]bool, serverCount)
+	topology = make([][]bool, algorithms.ServerCount)
 	for i := range topology {
-		topology[i] = make([]bool, serverCount)
+		topology[i] = make([]bool, algorithms.ServerCount)
 	}
 
 	splits := strings.Split(s, " ")

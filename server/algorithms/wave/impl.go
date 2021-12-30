@@ -3,44 +3,11 @@ package wave
 import (
 	"container/list"
 	"fmt"
-	"prr.configuration/config"
+	"server/algorithms"
 	"server/debug"
 	"server/network"
 )
 
-// Those variables are initiated once when the server start in the init function. They are and must be never changed.
-
-// localNumber is the number of the node represented by the current server
-var localNumber uint
-
-// serverCount is the number of servers in the network
-var serverCount uint
-
-// isMyNeighbors is an array of serverCount long which indicate who are the server neighbors.
-// if the array[i] is true, the node i is a neighbor of the current server
-var isMyNeighbors []bool
-
-// neighborsCount is the number of neighbor for the current node/server.
-var neighborsCount uint
-
-
-
-// running indicates if the shortest path research has already started, se to true in the wave handler and reset to
-// false in the function searchSP (max one at a time).
-var running = false
-
-// init is a function launched once by the handler. It instantiates the const variables such as:
-// localNumber, serverCount, isMyNeighbors and neighborsCount. All these, are and must not be mutated.
-func initVariables() {
-	localNumber = config.GetLocalServerNumber()
-	serverCount = uint(len(config.GetServers()))
-
-	isMyNeighbors   = make([]bool, serverCount)
-	neighborsCount = uint(len(config.GetNeighbors(localNumber)))
-	for _, v := range config.GetNeighbors(localNumber) {
-		isMyNeighbors[v] = true
-	}
-}
 
 // reset creates and return the base structures to the shortest path resolution, such has:
 // the topology, the array of active neighbors and the active neighbors count.
@@ -51,20 +18,20 @@ func reset() ([][]bool, []bool, uint){
 	var activeNeighborsCount uint
 
 	// Size the topology according to the serverCount
-	topology = make([][]bool, serverCount)
+	topology = make([][]bool, algorithms.ServerCount)
 	for i := range topology {
-		topology[i] = make([]bool, serverCount)
+		topology[i] = make([]bool, algorithms.ServerCount)
 	}
 
 	// Sets the base topology and the activeNeighbors according to the neighbors
-	activeNeighbors = make([]bool, serverCount)
-	for i := uint(0); i < serverCount; i++{
-		topology[localNumber][i] = isMyNeighbors[i]
-		activeNeighbors[i] = isMyNeighbors[i]
+	activeNeighbors = make([]bool, algorithms.ServerCount)
+	for i := uint(0); i < algorithms.ServerCount; i++{
+		topology[algorithms.LocalNumber][i] = algorithms.IsMyNeighbors[i]
+		activeNeighbors[i] = algorithms.IsMyNeighbors[i]
 	}
 
 	// Set the active neighbors count
-	activeNeighborsCount = neighborsCount
+	activeNeighborsCount = algorithms.NeighborsCount
 
 	return topology, activeNeighbors, activeNeighborsCount
 }
@@ -79,10 +46,10 @@ func searchSP() {
 
 	for {
 		wave++
-		sendToActiveNeighbors(& message{topology: topology, src: localNumber, wave: wave, active: true}, &activeNeighbors)
+		sendToActiveNeighbors(& message{topology: topology, src: algorithms.LocalNumber, wave: wave, active: true}, &activeNeighbors)
 
 		// Collecting wave response
-		for i := uint(0); i < neighborsCount; i++ {
+		for i := uint(0); i < algorithms.NeighborsCount; i++ {
 			m := receiveMessage(wave)
 			updateTopology(&topology, &m.topology)
 			activeNeighbors[m.src] = m.active
@@ -99,7 +66,7 @@ func searchSP() {
 
 	// Sending final wave
 	wave++
-	sendToActiveNeighbors(& message{topology: topology, src: localNumber, wave: wave, active: false}, &activeNeighbors)
+	sendToActiveNeighbors(& message{topology: topology, src: algorithms.LocalNumber, wave: wave, active: false}, &activeNeighbors)
 	for i := uint(0); i < activeNeighborsCount; i++ {
 		_ = receiveMessage(wave)
 	}
@@ -108,13 +75,13 @@ func searchSP() {
 	printSP(&topology)
 
 	// Setting to false in order to restart if necessary
-	running = false
+	algorithms.Running = false
 }
 
 //  sendToActiveNeighbors sends the message m to all active neighbors in activeNeighbors
 func sendToActiveNeighbors(m *message, activeNeighbors *[]bool) {
-	for i := range isMyNeighbors {
-		if isMyNeighbors[i] && (*activeNeighbors)[i] {
+	for i := range algorithms.IsMyNeighbors {
+		if  algorithms.IsMyNeighbors[i] && (*activeNeighbors)[i] {
 			str := serialize(m)
 			debug.LogSend(str)
 			network.SendToServer(str, uint(i))
@@ -178,22 +145,22 @@ func computeSP(finalTopo *[][]bool) [][]uint {
 
 	// 2D slice of the shortest paths. Row[i] = the shortest path to reach node i, Column[i] = ith node to visit for
 	// the given the shortest path
-	detailedSP := make([][]uint, serverCount)
+	detailedSP := make([][]uint,  algorithms.ServerCount)
 	for i := range *finalTopo  {
-		detailedSP[i] = make([]uint, 0, serverCount)
+		detailedSP[i] = make([]uint, 0,  algorithms.ServerCount)
 	}
 
 	// The shortest path to go the current node, is the current node.
-	detailedSP[localNumber] = append(detailedSP[localNumber], localNumber)
+	detailedSP[algorithms.LocalNumber] = append(detailedSP[algorithms.LocalNumber], algorithms.LocalNumber)
 
 	// Then, we start a breadth first search
 	var queue = list.New()
 	// Beginning with neighbors
-	for i := uint(0); i < serverCount; i++ {
-		if isMyNeighbors[i] {
+	for i := uint(0); i < algorithms.ServerCount; i++ {
+		if algorithms.IsMyNeighbors[i] {
 			queue.PushBack(i)
 			// Inserting local node and neighbors
-			detailedSP[i] = append(detailedSP[i], localNumber)
+			detailedSP[i] = append(detailedSP[i], algorithms.LocalNumber)
 			detailedSP[i] = append(detailedSP[i], i)
 		}
 	}
@@ -203,8 +170,8 @@ func computeSP(finalTopo *[][]bool) [][]uint {
 		queue.Remove(front)
 		node := front.Value.(uint)
 
-		for i := uint(0); i < serverCount; i++ {
-			if i != localNumber && (*finalTopo )[node][i] && len(detailedSP[i]) == 0 {
+		for i := uint(0); i < algorithms.ServerCount; i++ {
+			if i != algorithms.LocalNumber && (*finalTopo )[node][i] && len(detailedSP[i]) == 0 {
 				queue.PushBack(i)
 
 				for _, v := range detailedSP[node] {

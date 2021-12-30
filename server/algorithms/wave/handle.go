@@ -1,10 +1,11 @@
 // Package wave implements the logic for the waves algorithm.
-// It implements serialization/deserialization logic and a handler for incoming message
+// It implements serialization/deserialization logic and handlers for incoming message
 package wave
 
 import (
 	"container/list"
 	"prr.configuration/config"
+	"server/algorithms"
 	"server/debug"
 	"server/network"
 )
@@ -18,7 +19,6 @@ var cachedMessages = list.New()
 // Handle is a function to start in a goroutine. It receives the message from the network process.
 // It either starts the shortest path resolution if is not already running or transfer message to receiveMessage function.
 func Handle() {
-	initVariables()
 
 	for {
 		select {
@@ -26,17 +26,17 @@ func Handle() {
 			case data := <- network.DataChan:
 
 				// If start execution signal and not already running
-				if data.Message == network.SignalExec && !running {
-					running = true
+				if data.Message == network.SignalExec && !algorithms.Running  {
+					algorithms.Running  = true
 					go searchSP()
 
-				// Else if its a message from another server, it's a wave message so we handle it.
-				} else if config.IsServerIP(data.Sender) {
+				// Else if it's a message from another server, it's a wave message, so we handle it.
+				} else if config.IsServerIP(data.Sender) && algorithms.Running{
 
 					// Sometimes the process has not yet started and already receive waves. If this is the case, we
 					// store the message until the process has started.
 					m := deserialize(data.Message)
-					if running {
+					if algorithms.Running  {
 						messageChan <- &m
 					} else {
 						cachedMessages.PushBack(&m)
