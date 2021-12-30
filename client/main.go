@@ -1,23 +1,20 @@
+// Package main init config, reads file to know which algorithm is being executed and start the corresponding client.
 package main
 
 import (
-	"fmt"
-	"log"
-	"net"
+	"client/algorithms/wave"
 	"prr.configuration/config"
 )
 
+// main reads config and start the corresponding client
 func main() {
+
 	config.InitSimple("../config.json")
 
-	for _, v := range config.GetServers() {
-		srvAddr := fmt.Sprintf("%v:%v", v.Ip, v.Port)
-		conn, err := net.Dial("udp", srvAddr)
-		if err != nil {
-			log.Fatal(err)
-		}
+	switch config.GetAlgorithm() {
 
-		fmt.Fprintln(conn, "START")
-		conn.Close()
+	case config.AlgoWave:
+		wave.StartClient()
+	case config.AlgoProbe:
 	}
 }

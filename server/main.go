@@ -1,3 +1,4 @@
+// Package main Gets program args, launch setup network process and algorithm process
 package main
 
 import (
@@ -10,6 +11,7 @@ import (
 	"strconv"
 )
 
+// main gets program args, launch setup network process and algorithm process
 func main() {
 
 	// Getting program arg (server number).
@@ -30,16 +32,19 @@ func main() {
 		log.Fatal("Server number is an integer between [0, servers count [")
 	}
 
-	// Opening UDP Server.
+	// Resolving UDP Server.
 	port := config.GetServerById(config.GetLocalServerNumber()).Port
 	addr, _ := net.ResolveUDPAddr("udp", "localhost:" + strconv.FormatUint(uint64(port), 10))
 
 	network.WaitNetwork(addr)
 
-	// Init algorithms
-	wave.Init()
-
-	// Handle incoming messages
+	// Starting network process
 	go network.Handle(addr)
-	wave.Handle()
+
+	// Starting algorithm process
+	switch config.GetAlgorithm() {
+	case config.AlgoWave:
+		wave.Handle()
+	case config.AlgoProbe:
+	}
 }

@@ -1,3 +1,4 @@
+// Package config defines methods to get setup configurations
 package config
 
 import (
@@ -10,22 +11,32 @@ import (
 	"time"
 )
 
+// reader that parses configuration
 var reader *configReader = nil
 
+// localServerNumber stores the server number, unused if config is initialized by a client
 var localServerNumber uint
 
+const (
+	AlgoWave  = "wave"
+	AlgoProbe = "probe"
+)
+
+// Server is a struct that defines the characteristics of a server
 type Server struct {
 	Ip        string `json:"ip"`
 	Port      uint   `json:"port"`
 	Neighbors []uint `json:"neighbors"`
 }
 
+// configReader defines the field to read in the config file
 type configReader struct {
 	Debug   bool     `json:"debug"`
+	Version string   `json:"version"`
 	Servers []Server `json:"servers"`
 }
 
-// Init Load the config file as a list of Server
+// Init Loads the config file as a list of Server
 // path is used to find the config file
 // serverNumber is used on the server side, to remember who we are
 func Init(path string, serverNumber uint) {
@@ -45,12 +56,12 @@ func Init(path string, serverNumber uint) {
 	localServerNumber = serverNumber
 }
 
-// InitSimple For the client, the second parameter is useless
+// InitSimple Init the reader. Used by client because the second parameter is useless
 func InitSimple(path string) {
 	Init(path, 0)
 }
 
-// IsDebug Return the value of debug in config file
+// IsDebug Returns the value of debug in config file
 func IsDebug() bool {
 	if reader == nil {
 		log.Fatal("config not initialized")
@@ -59,7 +70,7 @@ func IsDebug() bool {
 	return reader.Debug
 }
 
-// GetServerById Return the server corresponding to the specified id
+// GetServerById Returns the server corresponding to the specified id
 func GetServerById(id uint) *Server {
 	if reader == nil {
 		log.Fatal("config not initialized")
@@ -72,7 +83,7 @@ func GetServerById(id uint) *Server {
 	return &reader.Servers[id]
 }
 
-// GetServerRandomly Return a server from the servers list
+// GetServerRandomly Returns a server from the servers list
 func GetServerRandomly() *Server {
 	if reader == nil {
 		log.Fatal("config not initialized")
@@ -81,7 +92,7 @@ func GetServerRandomly() *Server {
 	return GetServerById(uint(rand.Intn(len(reader.Servers))))
 }
 
-// GetServers Return all servers from the list
+// GetServers Returns all servers from the list
 func GetServers() []Server {
 	if reader == nil {
 		log.Fatal("config not initialized")
@@ -90,7 +101,7 @@ func GetServers() []Server {
 	return reader.Servers
 }
 
-// IsServerIP Check if the ip sent correspond to one of the server in the config file
+// IsServerIP Checks if the ip sent correspond to one of the server in the config file
 func IsServerIP(address string) bool {
 	if reader == nil {
 		log.Fatal("config not initialized")
@@ -106,7 +117,7 @@ func IsServerIP(address string) bool {
 	return false
 }
 
-// GetNeighbors Get all neighbors id of server id sent
+// GetNeighbors Gets all neighbors id of server id sent
 func GetNeighbors(id uint) []uint {
 	if reader == nil {
 		log.Fatal("config not initialized")
@@ -115,12 +126,27 @@ func GetNeighbors(id uint) []uint {
 	return reader.Servers[id].Neighbors
 }
 
-// isLocalhost Check if an adress is localhost
+// isLocalhost Checks if an address is localhost
 func isLocalhost(address string) bool {
 	return address == "127.0.0.1" || address == "localhost"
 }
 
-// GetLocalServerNumber Get the id specified in the Init function
+// GetLocalServerNumber Gets the id specified in the Init function
 func GetLocalServerNumber() uint {
 	return localServerNumber
+}
+
+// GetAlgorithm Gets the algorithm to use
+func GetAlgorithm() string {
+	if reader == nil {
+		log.Fatal("config not initialized")
+	}
+
+	algo := reader.Version
+
+	if algo != AlgoWave && algo != AlgoProbe {
+		log.Fatal("Unknown algorithm set")
+	}
+
+	return algo
 }
