@@ -76,7 +76,7 @@ Server 3 -> 4 :\
 Server 3 -> 2 : <br>
 `GO`\
 Server 2 -> 3 :\
-`ACK`\
+`ACK`
 
 ## Tests
 Les tests ont été réalisés avec la fichier de configuration de ce readme.
@@ -184,12 +184,12 @@ __Résultat__\
 
 * Remplir le fichier de configuration _config.json_ à la racine du projet.
   * debug ( booléen, true/false ): Pour lancer les serveurs en mode debug (affiche les messages entrants et sortants)
-  * versions ( string, indiquer "wave" ou "probe" ): Pour définir l'algorithme à utiliser "wave" pour ondulatoire ou "probe" pour sondes et échos
+  * versions ( string, indiquer "wave" ou "probe" ): Pour définir l'algorithme, utiliser "wave" pour ondulatoire.
   * servers ( ip, port et numéros des voisins [0, Nb serveurs - 1]) Définition du réseau. Au minimum 1 serveur. Si le réseau contient plus d'un serveur, il doit être **connexe**, au quel cas, l'algorithme ne fonctionnerait pas.
 ```
 {
   "debug": true,
-  "version": "probe",
+  "version": "wave",
   "servers": [
     {
       "ip": "127.0.0.1",
@@ -377,7 +377,7 @@ Comme nous pouvons le voir à la ligne 18, le serveur 3 s'annonce innactif. Le s
 __Résultat__\
 <span style="color:green">Succès</span>
 
-### Fusion correcte des topologie
+### Fusion correcte des topologies
 __Description__\
 Le serveur modifie correctement sa topologie avec les informations reçues.
 
@@ -428,3 +428,162 @@ Matrice ligne 2 || Matrice ligne 3 || Matrice ligne 4 = Matrice ligne 5
 
 __Résultat__\
 <span style="color:green">Succès</span>
+
+### Les plus courts chemins sont corrects
+__Description__\
+À la fin de l'exécution, les plus courts chemin sont des plus courts chemins
+
+Résultat du noeud 6:\
+`Shortest path to 0, length: 2, Path: 4 -> 3 -> 0`\
+`Shortest path to 1, length: 3, Path: 4 -> 3 -> 0 -> 1`\
+`Shortest path to 2, length: 3, Path: 4 -> 3 -> 0 -> 2`\
+`Shortest path to 3, length: 1, Path: 4 -> 3`\
+`Shortest path to 4, length: 0, Path: 4`\
+`Shortest path to 5, length: 2, Path: 4 -> 3 -> 5`\
+`Shortest path to 6, length: 2, Path: 4 -> 3 -> 6`\
+`Shortest path to 7, length: 3, Path: 4 -> 3 -> 6 -> 7`
+
+Conformément à la représentation du graphe, l'algorithme a trouvé les plus courts chemins du noeud 6 aux reste
+
+__Résultat__\
+<span style="color:green">Succès</span>
+
+### Réseau non connexe dysfonctionnel
+__Description__\
+Si le réseau n'est pas connexe, la recherche du plus court chemin ne fonctionne pas car l'algorithme ne s'arrête jamais.
+
+Pour ce test, nous avons retiré les liens du noeud 3 et de ses voisins.
+
+__Résultat__\
+<span style="color:green">Succès</span>
+
+# Deuxième partie: algorithme sondes et échos
+
+## Installation et utilisation
+* Cloner le répertoire.
+> `$ git clone https://github.com/MelvynHerzig/PRR_Labo4.git`
+
+* Remplir le fichier de configuration _config.json_ à la racine du projet.
+  * debug ( booléen, true/false ): Pour lancer les serveurs en mode debug (affiche les messages entrants et sortants)
+  * versions ( string, indiquer "wave" ou "probe" ): Pour définir l'algorithme, utiliser "probe" pour sondes et échos
+  * servers ( ip, port et numéros des voisins [0, Nb serveurs - 1]) Définition du réseau. Au minimum 1 serveur. Si le réseau contient plus d'un serveur, il doit être **connexe**, au quel cas, l'algorithme ne fonctionnerait pas.
+```
+{
+  "debug": true,
+  "version": "probe",
+  "servers": [
+    {
+      "ip": "127.0.0.1",
+      "port": 3000,
+      "neighbors": [1, 2, 3]
+    },
+    {
+      "ip": "127.0.0.1",
+      "port": 3001,
+      "neighbors": [0, 7]
+    },
+    {
+      "ip": "127.0.0.1",
+      "port": 3002,
+      "neighbors": [0]
+    },
+    {
+      "ip": "127.0.0.1",
+      "port": 3003,
+      "neighbors": [0, 4, 5, 6]
+    },
+    {
+      "ip": "127.0.0.1",
+      "port": 3004,
+      "neighbors": [3]
+    },
+    {
+      "ip": "127.0.0.1",
+      "port": 3005,
+      "neighbors": [3, 6]
+    },
+    {
+      "ip": "127.0.0.1",
+      "port": 3006,
+      "neighbors": [3, 5, 7]
+    },
+    {
+      "ip": "127.0.0.1",
+      "port": 3007,
+      "neighbors": [1, 6]
+    }
+  ]
+}
+```
+> La configuration précédente est un exemple avec huit serveurs.\
+> Le premier serveur dans la liste est le serveur 0 et le dernier, le serveur 7.\
+> La configuration précédente représente le graphe suivant:\
+> ![arborescence](https://user-images.githubusercontent.com/34660483/147826308-e62ec851-9d5e-4dd8-83b7-b6c104e5f928.png)
+
+* Démarrer le(s) serveur(s). Un argument est nécessaire.
+  * Entre 0 et N-1 avec N = nombres de serveurs configurés dans _config.json_
+
+> <u>Depuis le dossier _server_.</u>\
+> En admettant le fichier de configuration précédent:\
+> `$ go run . 0`\
+> `$ go run . 2`\
+> `$ go run . 4`\
+> `$ go run . 1`\
+> `$ go run . 5`\
+> `$ go run . 7`\
+> `$ go run . 6`\
+> `$ go run . 3`
+>
+> Il est également possible de démarrer les serveurs automatiquement avec les scriptes `server/win_start_servers.bat` pour windows ou `server/lin_start_server.sh` pour linux.\
+> \
+> L'ordre de démarrage n'est pas important. Durant cette étape, les serveurs s'inter-connectent. En conséquence, tant que tous ne sont pas allumés et connectés, ils n'acceptent que des connexions ayant une adresse IP source appartenant au fichier de configuration. De plus toute demande initiale se voit refusée tant que le réseau n'est pas prêt.\
+>\
+> Lorsque un serveur a complétement démarré, il affiche les lignes suivantes:\
+>![cmd](https://user-images.githubusercontent.com/34660483/147826831-11b7c10d-1aa8-401a-ac24-50f55c371e9e.png)\
+> Si tous les serveurs affichent ces messages, le réseau est démarré et prêt à accepter les demandes clientes.
+
+* Démarrer le client pour lancer une demande.  Un argument est nécessaire.
+  * Numéro du serveur distant auquel se connecter.
+
+> <u>Depuis le dossier _client_</u>\
+>\
+> Pour lancer un client qui démarre la recherche depuis le serveur 3\
+> `$ go run . 3`\
+>\
+>Il peut être lancé avant que tous le serveur soit prêt. Sa demande est renouvellée automatiquement jusqu'à ce qu'il soit prêt.
+
+* Lorsque la demande a été prise en compte chaque serveur affiche sa connaissance partielle des plus courts chemins jusqu'aux autres serveurs. Le noeud source affichera la liste réelle des plus courts chemin.
+
+> Par exemple, le résultat du serveur 0 dans la config de ce _readme_:\
+> ![probe](https://user-images.githubusercontent.com/34660483/147831762-c6c1d019-02ac-4940-93eb-1be21dd355ce.png)
+> 
+
+## Protocole UDP des sondes et échos
+Les messages échangées antres les serveurs ont le format suivant:\
+\<type> <id> <source> \<chemins les plus courts>
+
+> Le type est soit "probe" pour les sondes ou "echo" pour les échos
+
+> Id est l'identifiant unique de la série de sonde est écho en cours. En général, id à la valeur du serveur qui a déclanché la demande. De ce fait, il est possible que deux serveurs déclanchent deux demandes en même temps sans aucun problème.
+
+> Source est le numéro du serveur qui a émit le message.
+
+> Chemin les plus courts est un tableau à deux dimensions des chemins les plus courts connus.
+
+Par exemple, si le serveur 1 émet une sonde, initiée par une demande sur le serveur 5 et que son tableau des plus courts chemins est:
+```
+[1, 3]
+[]
+[6, 1, 4]
+```
+> Dans cette exemple, le noeud 1 de connais pas de plus court chemin jusqu'à 2.
+ 
+Le message sérialisé sera "probe 5 1 1-3_N_6-1-4"
+
+> Les lignes de la matrice sont séparées par des '_'
+
+> Les colonnes de la matrice sont séparées par des '-'
+
+> Si le plus court chemin n'est pas connu, il est traduit par un 'N'
+
+> Les messages ne doivent pas excéder 1024 bytes. Il n'est pas conseillé de faire un réseau avec plus de 20 noeuds
