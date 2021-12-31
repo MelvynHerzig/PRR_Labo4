@@ -5,67 +5,42 @@
     {
       "ip": "127.0.0.1",
       "port": 3000,
-      "neighbors": [1]
+      "neighbors": [1, 2, 3]
     },
     {
       "ip": "127.0.0.1",
       "port": 3001,
-      "neighbors": [0,2,3]
+      "neighbors": [0, 7]
     },
     {
       "ip": "127.0.0.1",
       "port": 3002,
-      "neighbors": [1, 4, 5]
+      "neighbors": [0]
     },
     {
       "ip": "127.0.0.1",
       "port": 3003,
-      "neighbors": [1,5,6]
+      "neighbors": [0, 4, 5, 6]
     },
     {
       "ip": "127.0.0.1",
       "port": 3004,
-      "neighbors": [2,5,7,8]
+      "neighbors": [3]
     },
     {
       "ip": "127.0.0.1",
       "port": 3005,
-      "neighbors": [2,3,4,9,11]
+      "neighbors": [3, 6]
     },
     {
       "ip": "127.0.0.1",
       "port": 3006,
-      "neighbors": [3,9,10]
+      "neighbors": [3, 5, 7]
     },
     {
       "ip": "127.0.0.1",
       "port": 3007,
-      "neighbors": [4,8]
-    },
-    {
-      "ip": "127.0.0.1",
-      "port": 3008,
-      "neighbors": [4,7]
-    },
-    {
-      "ip": "127.0.0.1",
-      "port": 3009,
-      "neighbors": [5,6,10]
-    },
-    {
-      "ip": "127.0.0.1",
-      "port": 3010,
-      "neighbors": [6,9]
-    },
-    {
-      "ip": "127.0.0.1",
-      "port": 3011,
-      "neighbors": [5,12]
-    },
-    {
-      "ip": "127.0.0.1",
-      "port": 3012,
-      "neighbors": [11]
+      "neighbors": [1, 6]
     }
   ]
 }
