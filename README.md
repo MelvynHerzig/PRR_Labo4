@@ -24,7 +24,9 @@ De plus, nous avons pris la liberté d'ajouter un mécanisme d'attente au démar
 En se basant sur la [donnée](https://github.com/MelvynHerzig/PRR_Labo4/blob/main/Labo_4_PRR_donnee.pdf), tout fonctionne.
 
 ## Améliorations possibles
-Pour l'algorithme ondulatoire, si une demande est en cours d'exécution (tous les serveurs ont déjà reçu le signal de départ), aucune autre demande ne peut être démarrée. Toutefois, si deux demandes initiales sont émises en même temps, le comportement est indéfini. Il faudrait améliorer cet aspect avec un mécanisme de section critique par exemple. 
+Pour l'algorithme ondulatoire, si une demande est en cours d'exécution (tous les serveurs ont déjà reçu le signal de départ), aucune autre demande ne peut être démarrée. Toutefois, si deux demandes initiales sont émises en même temps, le comportement est indéfini. Il faudrait améliorer cet aspect avec un mécanisme de section critique par exemple.
+
+Pour l'algorithme sondes et échos, seules les doubles demandes locales sont protégées. Il est donc tout à fait possible d'effectuer deux demandes en simultanées sur des noeuds différents. Cela aura un effet indéterminé.
 
 Le réseau est considéré sans panne, sans erreur et ne change pas au fil du temps. Dans une situation réelle, ces éléments devraient être pris en compte.
 
@@ -185,7 +187,7 @@ __Résultat__\
 * Remplir le fichier de configuration _config.json_ à la racine du projet.
   * debug ( booléen, true/false ): Pour lancer les serveurs en mode debug (affiche les messages entrants et sortants)
   * versions ( string, indiquer "wave" ou "probe" ): Pour définir l'algorithme, utiliser "wave" pour ondulatoire.
-  * servers ( ip, port et numéros des voisins [0, Nb serveurs - 1]) Définition du réseau. Au minimum 1 serveur. Si le réseau contient plus d'un serveur, il doit être **connexe**, au quel cas, l'algorithme ne fonctionnerait pas.
+  * servers ( ip, port et numéros des voisins [0, Nb serveurs - 1]) Définition du réseau. Au minimum 1 serveur. Si le réseau contient plus d'un serveur, il doit être **connexe** pour l'algorithme ondulatoires, au quel cas, l'algorithme ne fonctionnerait pas.
 ```
 {
   "debug": true,
@@ -443,14 +445,14 @@ Résultat du noeud 6:\
 `Shortest path to 6, length: 2, Path: 4 -> 3 -> 6`\
 `Shortest path to 7, length: 3, Path: 4 -> 3 -> 6 -> 7`
 
-Conformément à la représentation du graphe, l'algorithme a trouvé les plus courts chemins du noeud 6 aux reste
+Conformément à la représentation du graphe, l'algorithme a trouvé les plus courts chemins du noeud 6 au reste
 
 __Résultat__\
 <span style="color:green">Succès</span>
 
 ### Réseau non connexe dysfonctionnel
 __Description__\
-Si le réseau n'est pas connexe, la recherche du plus court chemin ne fonctionne pas car l'algorithme ne s'arrête jamais.
+Si le réseau n'est pas connexe, la recherche du plus court chemin ne fonctionne pas car l'algorithme ne s'arrête jamais puisque la condition d'arrêt des ondes n'est jamais remplie.
 
 Pour ce test, nous avons retiré les liens du noeud 3 et de ses voisins.
 
@@ -466,7 +468,7 @@ __Résultat__\
 * Remplir le fichier de configuration _config.json_ à la racine du projet.
   * debug ( booléen, true/false ): Pour lancer les serveurs en mode debug (affiche les messages entrants et sortants)
   * versions ( string, indiquer "wave" ou "probe" ): Pour définir l'algorithme, utiliser "probe" pour sondes et échos
-  * servers ( ip, port et numéros des voisins [0, Nb serveurs - 1]) Définition du réseau. Au minimum 1 serveur. Si le réseau contient plus d'un serveur, il doit être **connexe**, au quel cas, l'algorithme ne fonctionnerait pas.
+  * servers ( ip, port et numéros des voisins [0, Nb serveurs - 1]) Définition du réseau. Au minimum 1 serveur.
 ```
 {
   "debug": true,
@@ -564,7 +566,7 @@ Les messages échangées antres les serveurs ont le format suivant:\
 
 > Le type est soit "probe" pour les sondes ou "echo" pour les échos
 
-> Id est l'identifiant unique de la série de sonde est écho en cours. En général, id à la valeur du serveur qui a déclanché la demande. De ce fait, il est possible que deux serveurs déclanchent deux demandes en même temps sans aucun problème.
+> Id est l'identifiant unique de la série de sonde est écho en cours. En général, id à la valeur du serveur qui a déclanché la demande.
 
 > Source est le numéro du serveur qui a émit le message.
 
@@ -587,3 +589,215 @@ Le message sérialisé sera "probe 5 1 1-3_N_6-1-4"
 > Si le plus court chemin n'est pas connu, il est traduit par un 'N'
 
 > Les messages ne doivent pas excéder 1024 bytes. Il n'est pas conseillé de faire un réseau avec plus de 20 noeuds
+
+## Tests
+Les tests ont été réalisés avec la fichier de configuration de ce readme.
+
+Pour ces tests nous n'allons pas analyser la sortie de toutes les consoles. Nous allons nous concentrer sur des situations spécifiques 
+
+Les extraits suivant ont été tirés d'une demande effectuées sur le noeud 0.
+### Un noeud se comporte correctement lorsqu'il reçoit sa première sonde
+__Description__\
+Lorsqu'un noeud reçoit une sonde, il envoie une sonde à tous ses voisins sauf à l'émetteur de la sonde. Dès qu'il a reçu toutes ses réponses, il envoie un écho
+à l'émetteur de la première sonde.
+
+Nous allons analyser la sortie de la console 3\
+`1 DEBUG >> Dec 31 17:07:04 RECEIVED) probe 0 0 [chemins omis] from 0`\
+`2 DEBUG >> Dec 31 17:07:04 SENDED) probe 0 3 [chemins omis] to 4`\
+`3 DEBUG >> Dec 31 17:07:04 SENDED) probe 0 3 [chemins omis] to 5`\
+`4 DEBUG >> Dec 31 17:07:04 SENDED) probe 0 3 [chemins omis] to 6`\
+`5 DEBUG >> Dec 31 17:07:04 RECEIVED) echo 0 4 [chemins omis] from 4`\
+`6 DEBUG >> Dec 31 17:07:04 RECEIVED) echo 0 5 [chemins omis] from 5`\
+`7 DEBUG >> Dec 31 17:07:04 RECEIVED) echo 0 6 [chemins omis] from 6`\
+`8 DEBUG >> Dec 31 17:07:04 SENDED) echo 0 3 [chemins omis] to 0`\
+`[Résultat final omis]`
+
+En ligne 1, le serveur trois reçoit sa première sonde. Comme prévu en ligne 2-3-4, il envoie une sonde à tous ses voisins sauf à son "parent". Ligne 5-6-7, il récupère tous les échos, dès lors, il peut envoyer son écho à son parent en ligne 8.
+
+__Résultat__\
+<span style="color:green">Succès</span>
+
+### Une sonde peut être considérée comme un écho
+__Description__\
+Dans un graphe avec un cycle, deux sondes peuvent se croiser sur le même lien, il devient alors nécessaire de pouvoir considérer une sonde comme un écho.
+
+Ce phénomène arrive entre les noeuds 6 et 7.
+
+Nous allons analyser la sortie de la console 6\
+`1 DEBUG >> Dec 31 17:07:04 RECEIVED) probe 0 3 [chemins omis] from 3`\
+`2 DEBUG >> Dec 31 17:07:04 SENDED) probe 0 6 [chemins omis] to 5`\
+`3 DEBUG >> Dec 31 17:07:04 SENDED) probe 0 6 [chemins omis] to 7`\
+`4 DEBUG >> Dec 31 17:07:04 RECEIVED) probe 0 5[chemins omis] from 5`\
+`5 DEBUG >> Dec 31 17:07:04 RECEIVED) probe 0 7 [chemins omis] from 7`\
+`6 DEBUG >> Dec 31 17:07:04 SENDED) echo 0 6 [chemins omis] to 3`\
+`[Résultat final omis]`
+
+En lignes 1-2-3, le serveur reçoit une sonde du serveur 3 ce qui déclanche l'envoi de ses sondes aux serveur 5 et 7. Ces deux derniers ont déjà reçu une sonde qu'ils ont eux même propagé. En conséquence, en lignes 4-5, le serveur 6 considère leur sonde comme des échos. Finalement en ligne 6, le serveur peut répondre à son parent.
+
+__Résultat__\
+<span style="color:green">Succès</span>
+
+## Un noeud sans "enfant" répond directement à son parent
+__Description__\
+Il peut arriver qu'un noeud soit en extrémité d'une branche du graphe, il n'a donc aucun enfant à transmettre la sonde. En conséquence, il répond directement avec un écho.
+
+Ce phénomène arrive sur le noeud 2.
+
+
+`1 DEBUG >> Dec 31 17:07:04 RECEIVED) probe 0 0 0_0-1_0-2_0-3_N_N_N_N from 0`\
+`2 DEBUG >> Dec 31 17:07:04 SENDED) echo 0 2 0_0-1_0-2_0-3_N_N_N_N to 0`\
+`[Résultat final omis]`
+
+En ligne 1, le noeud 1 reçoit la sonde de 0. Comme il n'a aucun autre voisin, il lui rend directement un écho avec la même liste des plus courts chemins.
+
+__Résultat__\
+<span style="color:green">Succès</span>
+
+## Conception de la liste des chemins sur la première sonde (1).
+__Description__\
+Lorsque le noeud reçoit sa première sonde. Il n'a pas encore connaissance des plus courts chemins partielles. De ce fait, il se fabrique un tableau base sur le contenu de la sonde
+
+Ce phénomène arrive sur le noeud 1.
+
+`1 DEBUG >> Dec 31 18:11:43 RECEIVED) probe 0 0`\
+0_\
+0-1_\
+0-2_\
+0-3_\
+N_\
+N_\
+N_\
+N `from 0`\
+`2 DEBUG >> Dec 31 18:11:44 SENDED) probe 0 1`\
+0_\
+0-1_\
+0-2_\
+0-3_\
+N_\
+N_\
+N_\
+0-1-7 `to 7`\
+`[Résultat final omis]`
+
+En ligne 1, le noeud 1 reçoit la sonde de 0 avec sa liste des plus courts chemin. Comme il n'en a pas encore, il se l'approprie et la modifie. Comme le montre la ligne 2, le noeud 1 a ajouté le chemin jusqu'au noeud 7 car c'est un voisin de 1 et pas de 0. Le noeud 0 n'avait aucune connaissance du plus court chemin jusqu'au noeud 7
+
+__Résultat__\
+<span style="color:green">Succès</span>
+
+## Conception de la liste des chemins sur la première sonde (2).
+__Description__\
+Lorsque le noeud reçoit sa première sonde. Il n'a pas encore connaissance des plus courts chemins partielles. De ce fait, il se fabrique un tableau base sur le contenu de la sonde. 
+
+Contrairement au test précédent, un plus court existe déjà sur un des voisins.
+
+Ce phénomène arrive sur le noeud 5.
+
+`1 DEBUG >> Dec 31 18:11:44 RECEIVED) probe 0 3`\
+0_\
+0-1_\
+0-2_\
+0-3_\
+0-3-4_\
+0-3-5_\
+0-3-6_\
+N `from 3`\
+`2 DEBUG >> Dec 31 18:11:44 SENDED) probe 0 5 `\
+0_\
+0-1_\
+0-2_\
+0-3_\
+0-3-4_\
+0-3-5_\
+0-3-6_\
+N ` to 6`\
+`[Résultat final omis]`
+
+En ligne 1, le noeud 5 reçoit la sonde de 3 avec sa liste des plus courts chemin. Comme il n'en a pas encore, il se l'approprie et tente de la modifier. Comme le montre la ligne 2, le noeud 5 n'a pas ajouté son chemin jusqu'au noeud 6 car le noeud 3 connaissait déjà un plus court chemin.
+
+__Résultat__\
+<span style="color:green">Succès</span>
+
+## Fusion des listes des chemins.
+__Description__\
+Lorsqu'un noeud reçoit un écho ou une seconde sonde, il tente de mettre à jour sa liste si la liste reçue contient des plus courts chemins
+
+Ce phénomène arrive sur le noeud 6.
+
+`[Logs omis]`
+`3 DEBUG >> Dec 31 18:11:44 SENDED) probe 0 6`\
+ 0_\
+ 0-1_\
+ 0-2_\
+ 0-3_\
+ 0-3-4_\
+ 0-3-5_\
+ 0-3-6_\
+ 0-3-6-7 `to 7`\
+`4 DEBUG >> Dec 31 18:11:44 RECEIVED) probe 0 7 `\
+0_\
+0-1_\
+0-2_\
+0-3_\
+N_\
+N_\
+0-1-7-6_\
+0-1-7 `from 7`\
+`[Log omis]`
+`6 DEBUG >> Dec 31 18:11:44 SENDED) echo 0 6 `\
+0_\
+0-1_\
+0-2_\
+0-3_\
+0-3-4_\
+0-3-5_\
+0-3-6_\
+0-1-7 `to 3`\
+`[Résultat final omis]`
+
+En ligne 3, nous voyons la liste des plus courts chemin en 6. En ligne 4, le noeud 7 a envoyé sa liste des plus courts chemin. À ce moment, le noeud 6 doit mettre à jour sa liste. Les chemin jusqu'aux noeuds 0-1-2-3 ne changent pas. Le noeud 7 n'a pas connaissance des plus courts chemins jusqu'aux noeuds 4 et 5, le noeud 6 n'en tient pas compte. Le noeud 7 connait un chemin jusqu'au noeud 6 mais ce n'est pas plus court que celui que le noeud 6 a déjà. Finalement, le noeud 7 connait un chemin jusqu'à lui plus court que celui connu par le noeud 6, il est donc mis à jours.
+Comme le montre la ligne 6, le noeud 6 a mis à jours ses plus courts chemins correctement. 
+
+__Résultat__\
+<span style="color:green">Succès</span>
+
+### Les plus courts chemins sont corrects
+__Description__\
+À la fin de l'exécution, les plus courts chemin sont des plus courts chemins
+
+Résultat du noeud 0:\
+`Shortest path to 0, length: 0, Path: 0`\
+`Shortest path to 1, length: 1, Path: 0 -> 1`\
+`Shortest path to 2, length: 1, Path: 0 -> 2`\
+`Shortest path to 3, length: 1, Path: 0 -> 3`\
+`Shortest path to 4, length: 2, Path: 0 -> 3 -> 4`\
+`Shortest path to 5, length: 2, Path: 0 -> 3 -> 5`\
+`Shortest path to 6, length: 2, Path: 0 -> 3 -> 6`\
+`Shortest path to 7, length: 2, Path: 0 -> 1 -> 7`
+
+Conformément à la représentation du graphe, l'algorithme a trouvé les plus courts chemins du noeud 0 au reste.
+
+__Résultat__\
+<span style="color:green">Succès</span>
+
+### Réseau non connexe fonctionnel
+__Description__\
+Si le réseau n'est pas connexe, la recherche du plus court chemin fonctionne. Cependant,
+certains chemin seront désignés comme unknown.
+
+Pour ce test, nous avons retiré les liens du noeud 3 et de ses voisins.
+
+`Shortest path to 0, length: 0, Path: 0`\
+`Shortest path to 1, length: 1, Path: 0 -> 1`\
+`Shortest path to 2, length: 1, Path: 0 -> 2`\
+`unknown`\
+`unknown`\
+`Shortest path to 5, length: 4, Path: 0 -> 1 -> 7 -> 6 -> 5`\
+`Shortest path to 6, length: 3, Path: 0 -> 1 -> 7 -> 6`\
+`Shortest path to 7, length: 2, Path: 0 -> 1 -> 7`\
+
+En conséquence, les noeuds 3 et 4 ne peuvent plus être atteints. Ils sont inconnus sur le résultat final.
+
+__Résultat__\
+<span style="color:green">Succès</span>
+
+

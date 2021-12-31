@@ -5,7 +5,7 @@ package wave
 import (
 	"container/list"
 	"prr.configuration/config"
-	"server/algorithms"
+	"server/algorithms/common"
 	"server/debug"
 	"server/network"
 )
@@ -26,17 +26,17 @@ func Handle() {
 			case data := <- network.DataChan:
 
 				// If start execution signal and not already running
-				if data.Message == network.SignalExec && !algorithms.Running  {
-					algorithms.Running  = true
+				if data.Message == network.SignalExec && !common.Running {
+					common.Running = true
 					go searchSP()
 
 				// Else if it's a message from another server, it's a wave message, so we handle it.
-				} else if config.IsServerIP(data.Sender) && algorithms.Running{
+				} else if config.IsServerIP(data.Sender) && common.Running {
 
 					// Sometimes the process has not yet started and already receive waves. If this is the case, we
 					// store the message until the process has started.
 					m := deserialize(data.Message)
-					if algorithms.Running  {
+					if common.Running {
 						messageChan <- &m
 					} else {
 						cachedMessages.PushBack(&m)

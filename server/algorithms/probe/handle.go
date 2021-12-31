@@ -5,7 +5,7 @@ package probe
 import (
 	"fmt"
 	"prr.configuration/config"
-	"server/algorithms"
+	"server/algorithms/common"
 	"server/debug"
 	"server/network"
 )
@@ -14,8 +14,8 @@ import (
 // It either starts the shortest path resolution if is not already running or transfer message to receiveMessage function.
 func Handle() {
 
-	// temporary known the shortest path, updated at each echo and probe
-	var temporaryKnownSp [][]uint
+	// Adjacency matrix, updated at each echo and probe
+	var topology [][]bool
 
 	// Map that holds the response count to get before sending echo back to parent for a given message (id is the key)
 	var ids map[uint]uint
@@ -29,9 +29,9 @@ func Handle() {
 		case data := <- network.DataChan:
 
 			// If start execution signal and not already running
-			if data.Message == network.SignalExec && !algorithms.Running  {
-				algorithms.Running = true
-				ids, temporaryKnownSp, parents = startExecution()
+			if data.Message == network.SignalExec && !common.Running {
+				common.Running = true
+				ids,  topology, parents = startExecution()
 
 			// Else if it's a message from another server, it's a probe/echo message, so we handle it.
 			} else if config.IsServerIP(data.Sender) {
@@ -42,9 +42,9 @@ func Handle() {
 				debug.LogReceive(data.Message + " from " + fmt.Sprintf("%v", m.src))
 				switch m.mType {
 				case TypeEcho :
-					handleEcho(&m, &ids, &temporaryKnownSp, &parents)
+					handleEcho(&m, &ids, &topology, &parents)
 				case TypeProbe :
-					handleProbe(&m, &ids, &temporaryKnownSp, &parents)
+					handleProbe(&m, &ids, &topology, &parents)
 				}
 
 			}

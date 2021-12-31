@@ -2,7 +2,7 @@ package probe
 
 import (
 	"fmt"
-	"server/algorithms"
+	"server/algorithms/common"
 	"strconv"
 	"strings"
 )
@@ -24,46 +24,19 @@ type message struct {
 	mType string // Node topology
 	id uint      // unique identifier, generally the id of original source emission
 	src uint	 // Node Number of source
-	temporaryKnownSp [][]uint  // content
+	topology [][]bool  // content
 }
 
 // serialize translate a message into a string. Type, id and src are simply translated to string.
-// temporaryKnownSp sp is translated specially. if the matrix looks like [ [1, 2, 3],
-//																		   [2, 3],
-//																		   [] ],
-// it will be translated 1-2-3_2-3_N
-// The resulting string is <type> <id> <src> <str of matrix>
 func serialize(m *message) string {
 
-	// temporary known shortest paths
-	var strTemporaryKnownSp string
-	for i := range m.temporaryKnownSp {
-		if i > 0 {
-			strTemporaryKnownSp += "_"
-		}
-		// If no shortest path is known for the node i, put N
-		if len(m.temporaryKnownSp[i]) == 0 {
-			strTemporaryKnownSp += unknown
-		// Else put the known node.
-		} else {
-			for j := range m.temporaryKnownSp[i] {
-				if j > 0 {
-					strTemporaryKnownSp += "-"
-				}
-				strTemporaryKnownSp += fmt.Sprintf("%v", m.temporaryKnownSp[i][j])
-			}
-		}
-	}
+	// topology
+	strTemporaryKnownSp := common.SerializeTopology(&m.topology)
 
 	return fmt.Sprintf("%v %v %v %v", m.mType, m.id, m.src, strTemporaryKnownSp)
 }
 
 // deserialize translate a string into a message. If the string is not well-formed, the program will crash
-// temporaryKnownSp sp is translated specially. if the matrix looks like [ [1, 2, 3],
-//																		   [2, 3],
-//																		   [] ],
-// it will be translated 1-2-3_2-3_N
-// The resulting string is <type> <id> <src> <str of matrix>
 func deserialize(s string) message {
 	var m message
 
@@ -78,24 +51,7 @@ func deserialize(s string) message {
 	m.src = uint(src)
 
 	// temporary known shortest paths
-	var temporaryKnownSp [][]uint
-	temporaryKnownSp = make([][]uint, algorithms.ServerCount)
-
-	rows := strings.Split(splits[3], "_")
-	for i := range rows {
-
-		values := strings.Split(rows[i], "-")
-		if values[0] == unknown {
-			temporaryKnownSp[i] = make([]uint, 0,  algorithms.ServerCount)
-		} else {
-			temporaryKnownSp[i] = make([]uint, len(values), algorithms.ServerCount)
-			for j := range values {
-				node, _ := strconv.ParseUint(values[j], 10, 0)
-				temporaryKnownSp[i][j] = uint(node)
-			}
-		}
-	}
-	m.temporaryKnownSp = temporaryKnownSp
+	m.topology = common.DeserializeTopology(splits[3])
 
 	return m
 }

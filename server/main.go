@@ -6,7 +6,7 @@ import (
 	"net"
 	"os"
 	"prr.configuration/config"
-	"server/algorithms"
+	"server/algorithms/common"
 	"server/algorithms/probe"
 	"server/algorithms/wave"
 	"server/network"
@@ -44,7 +44,7 @@ func main() {
 	go network.Handle(addr)
 
 	// Starting algorithm process
-	algorithms.InitVariables()
+	common.InitVariables()
 	switch config.GetAlgorithm() {
 	case config.AlgoWave:
 		wave.Handle()

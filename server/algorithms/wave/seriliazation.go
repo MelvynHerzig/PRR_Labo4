@@ -2,7 +2,7 @@ package wave
 
 import (
 	"fmt"
-	"server/algorithms"
+	"server/algorithms/common"
 	"strconv"
 	"strings"
 )
@@ -16,29 +16,10 @@ type message struct {
 }
 
 // serialize translate a message into a string
-// For example, if the server src is 2, it is active, it is at the 4th round and the matrix is [false, true, false]
-//																							   [true, false, true]
-//																							   [false, true, false]
-// The string will be: "0-1-0_1-0-1_0-1-0 2 4 1" (i.e <matrix true=1, false = 0> <src num> <wave num> <active true= 1 false = 0>)
 func serialize(m *message) string {
 
 	// Topology
-	var strTopo string
-	for i := range m.topology {
-		if i > 0 {
-			strTopo += "_"
-		}
-		for j := range m.topology[i] {
-			if j > 0 {
-				strTopo += "-"
-			}
-			if m.topology[i][j] {
-				strTopo += "1"
-			} else {
-				strTopo += "0"
-			}
-		}
-	}
+	strTopo := common.SerializeTopology(&m.topology)
 
 	// Active
 	var strActive string
@@ -52,33 +33,18 @@ func serialize(m *message) string {
 }
 
 // deserialize translate a string into a message. If the string is not well-formed, the program will crash
-// For example, if the server src is 2, it is active, it is at the 4th round and the matrix is [false, true, false]
-//																							   [true, false, true]
-//																							   [false, true, false]
-// The string must be: "0-1-0_1-0-1_0-1-0 2 4 1" (i.e <matrix true=1, false = 0> <src num> <wave num> <active true= 1 false = 0>)
 func deserialize(s string) message {
 	var m message
 	var topology [][]bool
-	topology = make([][]bool, algorithms.ServerCount)
+	topology = make([][]bool, common.ServerCount)
 	for i := range topology {
-		topology[i] = make([]bool, algorithms.ServerCount)
+		topology[i] = make([]bool, common.ServerCount)
 	}
 
 	splits := strings.Split(s, " ")
 
 	// Topology
-	rows := strings.Split(splits[0], "_")
-	for i := range rows {
-		values := strings.Split(rows[i], "-")
-		for j := range values {
-			if values[j] == "1" {
-				topology[i][j] = true
-			} else {
-				topology[i][j] = false
-			}
-		}
-	}
-	m.topology = topology
+	m.topology = common.DeserializeTopology(splits[0])
 
 	// Number
 	src, _ := strconv.ParseUint(splits[1], 10, 0)
