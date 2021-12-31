@@ -31,7 +31,7 @@ func Handle() {
 			// If start execution signal and not already running
 			if data.Message == network.SignalExec && !algorithms.Running  {
 				algorithms.Running = true
-				ids, temporaryKnownSp = startExecution()
+				ids, temporaryKnownSp, parents = startExecution()
 
 			// Else if it's a message from another server, it's a probe/echo message, so we handle it.
 			} else if config.IsServerIP(data.Sender) {

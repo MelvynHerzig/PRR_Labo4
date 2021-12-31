@@ -11,7 +11,7 @@ import (
 const maxUint = ^uint(0)
 
 // startExecution is launched when a new shortest path search is asked. One at a time.
-func startExecution() (map[uint]uint, [][]uint) {
+func startExecution() (map[uint]uint, [][]uint, map[uint]uint) {
 	ids := make(map[uint]uint)
 	ids[algorithms.LocalNumber] = algorithms.NeighborsCount
 
@@ -28,10 +28,12 @@ func startExecution() (map[uint]uint, [][]uint) {
 		}
 	}
 
+	parents := make(map[uint]uint)
+
 	// Sending probe to all neighbors
 	sendToNeighbors(&message{mType: TypeProbe, id:algorithms.LocalNumber, src: algorithms.LocalNumber, temporaryKnownSp: temporaryKnownSp})
 
-	return ids, temporaryKnownSp
+	return ids, temporaryKnownSp, parents
 }
 
 // handleProbe handles a probe (message m) updates map ids of response count left, 2D slices of know shortest path and
