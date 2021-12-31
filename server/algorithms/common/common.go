@@ -125,6 +125,7 @@ func ComputeSP(finalTopo *[][]bool, start uint) [][]uint {
 			if i != start && (*finalTopo )[node][i] && len(detailedSP[i]) == 0 {
 				queue.PushBack(i)
 
+				// Copy path to node to reach i and add i
 				for _, v := range detailedSP[node] {
 					detailedSP[i] = append(detailedSP[i], v)
 				}

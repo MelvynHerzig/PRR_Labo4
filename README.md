@@ -10,7 +10,7 @@ Ce laboratoire a pour but de comprendre les paradigmes de programmation dans une
 * Algorithme ondulatoire 
 * Algorithme sondes et échos
 
-Chacune de ces parties effectue la recherche de plus courts chemins dans un réseau __connexe__.
+Chacune de ces parties effectue la recherche de plus courts chemins dans un réseau en échangeant des topologies (matrices d'adjacence).
 
 La donnée complète du laboratoire est disponible [ici](https://github.com/MelvynHerzig/PRR_Labo4/blob/main/Labo_4_PRR_donnee.pdf).
 
@@ -24,16 +24,18 @@ De plus, nous avons pris la liberté d'ajouter un mécanisme d'attente au démar
 En se basant sur la [donnée](https://github.com/MelvynHerzig/PRR_Labo4/blob/main/Labo_4_PRR_donnee.pdf), tout fonctionne.
 
 ## Améliorations possibles
-Pour l'algorithme ondulatoire, si une demande est en cours d'exécution (tous les serveurs ont déjà reçu le signal de départ), aucune autre demande ne peut être démarrée. Toutefois, si deux demandes initiales sont émises en même temps, le comportement est indéfini. Il faudrait améliorer cet aspect avec un mécanisme de section critique par exemple.
+Pour l'algorithme ondulatoire, si une demande est en cours d'exécution (tous les serveurs ont déjà reçu le signal de départ), aucune autre demande ne peut être démarrée. Toutefois, si deux demandes initiales sont émises en même temps, le comportement est indéfini. 
 
 Pour l'algorithme sondes et échos, seules les doubles demandes locales sont protégées. Il est donc tout à fait possible d'effectuer deux demandes en simultanées sur des noeuds différents. Cela aura un effet indéterminé.
+
+Il faudrait améliorer ces aspects, par exemple avec un mécanisme de section critique.
 
 Le réseau est considéré sans panne, sans erreur et ne change pas au fil du temps. Dans une situation réelle, ces éléments devraient être pris en compte.
 
 # Protocole de communication UDP de démarrage des serveurs (serveur - serveur)
 Nous avons mis en place un protocole de démarrage des serveurs. Les serveurs doivent s'attendre avant de démarrer le traitement des demandes.
 
-Durant le protocole de démarrage uniquement, tous les messages sont acquittés. Si aucun acquittement n'est reçu après 1s, le message est re-envoyé. 
+Durant le protocole de démarrage uniquement, tous les messages sont acquittés. Si aucun acquittement n'est reçu après 1 seconde, le message est re-envoyé. 
 
 ## Comment un serveur trouve un autre serveur (adresses et ports)?
 Le serveur interroge le fichier _config.json_.
@@ -43,7 +45,7 @@ Au démarrage, un serveur de numéro N ( > 0 ) commence par attendre que le serv
 
 Dès que le serveur N a reçu le "OK" de N - 1, il envoie à son tour un "OK" à N + 1, seulement si N n'est pas le dernier serveur dans _config.json_
 
-Lorsque le dernier serveur dans _config.json_ (de numéro M) reçoit "OK", cela signifie que tous les serveurs ont été allumés. Il envoie alors à M-1 "GO". M-1 transfert à M-2 et ainsi de suite. recevoir le message go signifie que le serveur peut désormais accepter des demandes clientes.
+Lorsque le dernier serveur dans _config.json_ (de numéro M) reçoit "OK", cela signifie que tous les serveurs ont été allumés. Il envoie alors à M-1 "GO". M-1 transfert à M-2 et ainsi de suite. Recevoir le message "GO" signifie que le serveur peut désormais accepter des demandes clientes.
 
 ## Qu'est ce qui se passe quand un message est reçu ? 
 Le serveur N vérifie si le contenu du message correspond à ce qu'il devrait recevoir durant sa phase de démarrage et si la source est N +/- 1 (dans un context local, la vérification de la source ne fait pas de sens). Si c'est le cas, il acquitte le message en envoyant un "ACK", sinon le message est abandonné.
@@ -84,14 +86,14 @@ Server 2 -> 3 :\
 Les tests ont été réalisés avec la fichier de configuration de ce readme.
 ### Attente des serveurs non démarrés
 __Description__\
-Les serveurs attendent que tous les serveurs soient démarrés avant d'accepter les demandes. Les serveur démarrés affichent:\
+Les serveurs attendent que tous les serveurs soient démarrés avant d'accepter les demandes. Les serveur démarrés doivent afficher:\
 ![l1](https://user-images.githubusercontent.com/34660483/147829116-e89c04c5-c6b0-499c-aca3-84846f42691c.png)\
 __Résultat__\
 <span style="color:green">Succès</span>
 
 ### Les serveurs s'attendent avant de démarrer
 __Description__\
-Les serveurs sont démarrées dans un ordre aléatoire. Après un instant tous affichent:\
+Les serveurs sont démarrées dans un ordre aléatoire. Après un instant, ils doivent afficher:\
 ![cmd](https://user-images.githubusercontent.com/34660483/147826831-11b7c10d-1aa8-401a-ac24-50f55c371e9e.png)\
 __Résultat__\
 <span style="color:green">Succès</span>
@@ -111,10 +113,10 @@ Le client interroge le fichier _config.json_.
 ## Qui parle et quand ? 
 Le client envoie le message "EXEC" au(x) serveur(s). Si l'algorithme configuré est ondulatoire, le client contacte tous les serveurs. Sinon si l'algorithme est sondes et échos, il contacte le serveur reçu en paramètre.
 
-Le client attend une seconde de recevoir un "ACK", sinon la demande est renouvelée.
+Le client attend de recevoir un "ACK" durant 1 seconde, sinon la demande est renouvelée.
 
 ## Qu'est ce qui se passe quand le message est reçu par le serveur ? 
-Si le serveur démarre, le message est ignoré, sinon il acquitte le message et transmet le message au processus d'exécution de l'algorithme.
+Si le serveur est en cours de démarrage, le message est ignoré, sinon il acquitte le message et transmet le message au processus d'exécution de l'algorithme.
 
 > Le message peut être ignoré par le processus d'exécution de l'algorithme si une demande est déjà en cours de traitement.
 
@@ -186,8 +188,8 @@ __Résultat__\
 
 * Remplir le fichier de configuration _config.json_ à la racine du projet.
   * debug ( booléen, true/false ): Pour lancer les serveurs en mode debug (affiche les messages entrants et sortants)
-  * versions ( string, indiquer "wave" ou "probe" ): Pour définir l'algorithme, utiliser "wave" pour ondulatoire.
-  * servers ( ip, port et numéros des voisins [0, Nb serveurs - 1]) Définition du réseau. Au minimum 1 serveur. Si le réseau contient plus d'un serveur, il doit être **connexe** pour l'algorithme ondulatoires, au quel cas, l'algorithme ne fonctionnerait pas.
+  * version ( string, indiquer "wave" ou "probe" ): Définit l'algorithme, utiliser "wave" pour l'algorithme ondulatoire.
+  * servers ( ip, port et numéros des voisins [0, Nb serveurs - 1]) Définition du réseau. Au minimum 1 serveur. Si le réseau contient plus d'un serveur, il doit être **connexe** pour l'algorithme ondulatoire. Dans le cas contraire, l'algorithme ne fonctionnera pas.
 ```
 {
   "debug": true,
@@ -257,7 +259,7 @@ __Résultat__\
 >
 > Il est également possible de démarrer les serveurs automatiquement avec les scriptes `server/win_start_servers.bat` pour windows ou `server/lin_start_server.sh` pour linux.\
 > \
-> L'ordre de démarrage n'est pas important. Durant cette étape, les serveurs s'inter-connectent. En conséquence, tant que tous ne sont pas allumés et connectés, ils n'acceptent que des connexions ayant une adresse IP source appartenant au fichier de configuration. De plus toute demande initiale se voit refusée tant que le réseau n'est pas prêt.\
+> L'ordre de démarrage n'est pas important. Durant cette étape, les serveurs s'inter-connectent. En conséquence, tant que tous ne sont pas allumés et connectés, ils n'acceptent que des connexions ayant une adresse IP source appartenant au fichier de configuration. De plus toute demande initiale sont refusées tant que le réseau n'est pas prêt.\
 >\
 > Lorsque un serveur a complétement démarré, il affiche les lignes suivantes:\
 >![cmd](https://user-images.githubusercontent.com/34660483/147826831-11b7c10d-1aa8-401a-ac24-50f55c371e9e.png)\
@@ -280,7 +282,7 @@ __Résultat__\
 
 ## Protocole UDP des ondes
 Les ondes échangées antres les serveurs ont le format suivant:\
-\<matrice d'adjacence> <numéro du serveur source> <numéro de la onde> \<source active>
+\<matrice d'adjacence> <numéro du serveur source> <numéro de l'onde> \<activité de la source>
 
 Par exemple, si le serveur 2 émet sa troisième onde, il n'est plus actif et possède la matrice d'adjacence:
 ```
@@ -302,7 +304,8 @@ Les tests ont été réalisés avec la fichier de configuration de ce readme.
 
 Pour ces tests nous n'allons pas analyser la sortie de toutes les consoles. Nous allons nous concentrer sur des situations spécifiques 
 
-Pour les réceptions, les heures affichées sont les heures de traitement et non pas l'heure effective de la réception.
+Pour les réceptions, les heures affichées sont les heures de traitement et non pas les heures effectives de réception.
+
 ### Les ondes sont straitées séquentiellement
 __Description__\
 Les ondes doivent être traitées les unes à la suite des autres, sans chevauchement, indépendament de la vitesse de chaque noeud.
@@ -336,14 +339,14 @@ Nous allons analyser la sortie de la console 6
 
 > Pour rappel, l'avant dernier numéro représente le numéro de l'onde.
 
-Comme nous pouvons le voir, par exemple, aux lignes 4-5-6 ou 10-11-12 les ondes ne se chevauchent pas. Le serveur attend d'avoir reçu une onde correspondant à l'onde locale en cours avant de passer à l'onde suivante.
+Comme nous pouvons le voir, par exemple, aux lignes 4-5-6 ou 10-11-12 les ondes ne se chevauchent pas. Le serveur attend d'avoir reçu les ondes correspondantes à l'onde locale en cours avant de passer à l'onde suivante.
 
 Pour effectuer ce test, nous avons volontairement ralenti le server 5. Ce qui a laissé aux serveurs 3 et 7 l'opportunité de potentiellement voler la place du serveur 5 durant l'onde en cours.
 
 __Résultat__\
 <span style="color:green">Succès</span>
 
-### Les ondes sont straitées séquentiellement
+### Les ondes sont traitées séquentiellement
 __Description__\
 Si un serveur se désigne comme inactif, il ne reçoit et n'émet plus de messages à la prochaine onde.
 
@@ -372,7 +375,7 @@ Nous allons analyser la sortie de la console 6
 `22 DEBUG >> Dec 31 16:07:52 RECEIVED) [matrice omise] 5 4 0`
 `[Résultat final omis]`
 
-> Pour rappel, l'antépénultième et dernier nombres sont respectivement le serveur source et son état (actif ou non)
+> Pour rappel, l'antépénultième et le dernier nombres sont respectivement le serveur source et son état (actif ou non)
 
 Comme nous pouvons le voir à la ligne 18, le serveur 3 s'annonce innactif. Le serveur 6 ne lui envoie plus de message (lignes 19 et 20) et il n'attend pas de recevoir ses messages pour continuer son exécution (lignes 21 et 22).
 
@@ -383,7 +386,7 @@ __Résultat__\
 __Description__\
 Le serveur modifie correctement sa topologie avec les informations reçues.
 
-Nous allons analyser 4 lignes de la console 7 
+Nous allons analyser 4 lignes de la console 7\
 `1 [ligne omise]`\
 `2 DEBUG >> Dec 31 16:07:52 SENDED)`\
 0-0-0-0-0-0-0-0_\
@@ -452,7 +455,7 @@ __Résultat__\
 
 ### Réseau non connexe dysfonctionnel
 __Description__\
-Si le réseau n'est pas connexe, la recherche du plus court chemin ne fonctionne pas car l'algorithme ne s'arrête jamais puisque la condition d'arrêt des ondes n'est jamais remplie.
+Si le réseau n'est pas connexe, la recherche du plus court chemin ne fonctionne pas car l'algorithme ne s'arrête jamais. En effet, la condition d'arrêt des ondes n'est jamais remplie.
 
 Pour ce test, nous avons retiré les liens du noeud 3 et de ses voisins.
 
@@ -467,7 +470,7 @@ __Résultat__\
 
 * Remplir le fichier de configuration _config.json_ à la racine du projet.
   * debug ( booléen, true/false ): Pour lancer les serveurs en mode debug (affiche les messages entrants et sortants)
-  * versions ( string, indiquer "wave" ou "probe" ): Pour définir l'algorithme, utiliser "probe" pour sondes et échos
+  * versions ( string, indiquer "wave" ou "probe" ): Définit l'algorithme, utiliser "probe" pour l'algorithme sondes et échos
   * servers ( ip, port et numéros des voisins [0, Nb serveurs - 1]) Définition du réseau. Au minimum 1 serveur.
 ```
 {
@@ -538,7 +541,7 @@ __Résultat__\
 >
 > Il est également possible de démarrer les serveurs automatiquement avec les scriptes `server/win_start_servers.bat` pour windows ou `server/lin_start_server.sh` pour linux.\
 > \
-> L'ordre de démarrage n'est pas important. Durant cette étape, les serveurs s'inter-connectent. En conséquence, tant que tous ne sont pas allumés et connectés, ils n'acceptent que des connexions ayant une adresse IP source appartenant au fichier de configuration. De plus toute demande initiale se voit refusée tant que le réseau n'est pas prêt.\
+> L'ordre de démarrage n'est pas important. Durant cette étape, les serveurs s'inter-connectent. En conséquence, tant que tous ne sont pas allumés et connectés, ils n'acceptent que des connexions ayant une adresse IP source appartenant au fichier de configuration. De plus toute demande initiale sont refusées tant que le réseau n'est pas prêt.\
 >\
 > Lorsque un serveur a complétement démarré, il affiche les lignes suivantes:\
 >![cmd](https://user-images.githubusercontent.com/34660483/147826831-11b7c10d-1aa8-401a-ac24-50f55c371e9e.png)\
@@ -554,7 +557,7 @@ __Résultat__\
 >\
 >Il peut être lancé avant que tous le serveur soit prêt. Sa demande est renouvellée automatiquement jusqu'à ce qu'il soit prêt.
 
-* Lorsque la demande a été prise en compte chaque serveur affiche sa connaissance partielle des plus courts chemins jusqu'aux autres serveurs. Le noeud source affichera la liste réelle des plus courts chemin.
+* Lorsque la demande a été prise en compte chaque serveur affiche sa connaissance partielle des plus courts chemins jusqu'aux autres serveurs. Le noeud source affichera la liste réelle des plus courts chemins.
 
 > Par exemple, le résultat du serveur 0 dans la config de ce _readme_:\
 > ![probe](https://user-images.githubusercontent.com/34660483/147831762-c6c1d019-02ac-4940-93eb-1be21dd355ce.png)
@@ -562,7 +565,7 @@ __Résultat__\
 
 ## Protocole UDP des sondes et échos
 Les messages échangées antres les serveurs ont le format suivant:\
-\<type> <id> <source> \<chemins les plus courts>
+\<type> \<id> \<serveur source> \<matrice d'adjacence>
 
 > Le type est soit "probe" pour les sondes ou "echo" pour les échos
 
@@ -572,15 +575,14 @@ Les messages échangées antres les serveurs ont le format suivant:\
 
 > Chemin les plus courts est un tableau à deux dimensions des chemins les plus courts connus.
 
-Par exemple, si le serveur 1 émet une sonde, initiée par une demande sur le serveur 5 et que son tableau des plus courts chemins est:
+Par exemple, si le serveur 1 émet une sonde, initiée par une demande sur le serveur 5 et que sa topologie est:
 ```
-[1, 3]
-[]
-[6, 1, 4]
+[false, true, false]
+[true, false, true]
+[false, true, false]
 ```
-> Dans cette exemple, le noeud 1 de connais pas de plus court chemin jusqu'à 2.
- 
-Le message sérialisé sera "probe 5 1 1-3_N_6-1-4"
+
+Le message sérialisé sera "probe 5 1 0-1-0_1-0-1_0-1-0"
 
 > Les lignes de la matrice sont séparées par des '_'
 
@@ -595,24 +597,24 @@ Les tests ont été réalisés avec la fichier de configuration de ce readme.
 
 Pour ces tests nous n'allons pas analyser la sortie de toutes les consoles. Nous allons nous concentrer sur des situations spécifiques 
 
-Les extraits suivant ont été tirés d'une demande effectuées sur le noeud 0.
+Les extraits suivant ont été tirés d'une demande effectuée sur le noeud 0.
 ### Un noeud se comporte correctement lorsqu'il reçoit sa première sonde
 __Description__\
 Lorsqu'un noeud reçoit une sonde, il envoie une sonde à tous ses voisins sauf à l'émetteur de la sonde. Dès qu'il a reçu toutes ses réponses, il envoie un écho
 à l'émetteur de la première sonde.
 
 Nous allons analyser la sortie de la console 3\
-`1 DEBUG >> Dec 31 17:07:04 RECEIVED) probe 0 0 [chemins omis] from 0`\
-`2 DEBUG >> Dec 31 17:07:04 SENDED) probe 0 3 [chemins omis] to 4`\
-`3 DEBUG >> Dec 31 17:07:04 SENDED) probe 0 3 [chemins omis] to 5`\
-`4 DEBUG >> Dec 31 17:07:04 SENDED) probe 0 3 [chemins omis] to 6`\
-`5 DEBUG >> Dec 31 17:07:04 RECEIVED) echo 0 4 [chemins omis] from 4`\
-`6 DEBUG >> Dec 31 17:07:04 RECEIVED) echo 0 5 [chemins omis] from 5`\
-`7 DEBUG >> Dec 31 17:07:04 RECEIVED) echo 0 6 [chemins omis] from 6`\
-`8 DEBUG >> Dec 31 17:07:04 SENDED) echo 0 3 [chemins omis] to 0`\
+`1 DEBUG >> Dec 31 17:07:04 RECEIVED) probe 0 0 [matrice omise] from 0`\
+`2 DEBUG >> Dec 31 17:07:04 SENDED) probe 0 3 [matrice omise] to 4`\
+`3 DEBUG >> Dec 31 17:07:04 SENDED) probe 0 3 [matrice omise] to 5`\
+`4 DEBUG >> Dec 31 17:07:04 SENDED) probe 0 3 [matrice omise] to 6`\
+`5 DEBUG >> Dec 31 17:07:04 RECEIVED) echo 0 4 [matrice omise] from 4`\
+`6 DEBUG >> Dec 31 17:07:04 RECEIVED) echo 0 5 [matrice omise] from 5`\
+`7 DEBUG >> Dec 31 17:07:04 RECEIVED) echo 0 6 [matrice omise] from 6`\
+`8 DEBUG >> Dec 31 17:07:04 SENDED) echo 0 3 [matrice omise] to 0`\
 `[Résultat final omis]`
 
-En ligne 1, le serveur trois reçoit sa première sonde. Comme prévu en ligne 2-3-4, il envoie une sonde à tous ses voisins sauf à son "parent". Ligne 5-6-7, il récupère tous les échos, dès lors, il peut envoyer son écho à son parent en ligne 8.
+En ligne 1, le serveur 3 reçoit sa première sonde. Comme prévu en ligne 2-3-4, il envoie une sonde à tous ses voisins sauf à son "parent". Ligne 5-6-7, il récupère tous les échos, dès lors, il peut envoyer son écho à son parent en ligne 8.
 
 __Résultat__\
 <span style="color:green">Succès</span>
@@ -624,15 +626,15 @@ Dans un graphe avec un cycle, deux sondes peuvent se croiser sur le même lien, 
 Ce phénomène arrive entre les noeuds 6 et 7.
 
 Nous allons analyser la sortie de la console 6\
-`1 DEBUG >> Dec 31 17:07:04 RECEIVED) probe 0 3 [chemins omis] from 3`\
-`2 DEBUG >> Dec 31 17:07:04 SENDED) probe 0 6 [chemins omis] to 5`\
-`3 DEBUG >> Dec 31 17:07:04 SENDED) probe 0 6 [chemins omis] to 7`\
-`4 DEBUG >> Dec 31 17:07:04 RECEIVED) probe 0 5[chemins omis] from 5`\
-`5 DEBUG >> Dec 31 17:07:04 RECEIVED) probe 0 7 [chemins omis] from 7`\
-`6 DEBUG >> Dec 31 17:07:04 SENDED) echo 0 6 [chemins omis] to 3`\
+`1 DEBUG >> Dec 31 17:07:04 RECEIVED) probe 0 3 [matrice omise] from 3`\
+`2 DEBUG >> Dec 31 17:07:04 SENDED) probe 0 6 [matrice omise] to 5`\
+`3 DEBUG >> Dec 31 17:07:04 SENDED) probe 0 6 [matrice omise] to 7`\
+`4 DEBUG >> Dec 31 17:07:04 RECEIVED) probe 0 5[matrice omise] from 5`\
+`5 DEBUG >> Dec 31 17:07:04 RECEIVED) probe 0 7 [matrice omise] from 7`\
+`6 DEBUG >> Dec 31 17:07:04 SENDED) echo 0 6 [matrice omise] to 3`\
 `[Résultat final omis]`
 
-En lignes 1-2-3, le serveur reçoit une sonde du serveur 3 ce qui déclanche l'envoi de ses sondes aux serveur 5 et 7. Ces deux derniers ont déjà reçu une sonde qu'ils ont eux même propagé. En conséquence, en lignes 4-5, le serveur 6 considère leur sonde comme des échos. Finalement en ligne 6, le serveur peut répondre à son parent.
+En lignes 1-2-3, le serveur reçoit une sonde du serveur 3 ce qui déclanche l'envoi de ses sondes aux serveur 5 et 7. Ces deux derniers ont déjà reçu une sonde qu'ils ont eux même propagée. En conséquence, en lignes 4-5, le serveur 6 considère leurs sondes comme des échos. Finalement, en ligne 6, le serveur peut répondre à son parent.
 
 __Résultat__\
 <span style="color:green">Succès</span>
@@ -643,9 +645,8 @@ Il peut arriver qu'un noeud soit en extrémité d'une branche du graphe, il n'a 
 
 Ce phénomène arrive sur le noeud 2.
 
-
-`1 DEBUG >> Dec 31 17:07:04 RECEIVED) probe 0 0 0_0-1_0-2_0-3_N_N_N_N from 0`\
-`2 DEBUG >> Dec 31 17:07:04 SENDED) echo 0 2 0_0-1_0-2_0-3_N_N_N_N to 0`\
+`1 DEBUG >> Dec 31 17:07:04 RECEIVED) probe 0 0 [matrice omise] from 0`\
+`2 DEBUG >> Dec 31 17:07:04 SENDED) echo 0 2 [matrice omise] to 0`\
 `[Résultat final omis]`
 
 En ligne 1, le noeud 1 reçoit la sonde de 0. Comme il n'a aucun autre voisin, il lui rend directement un écho avec la même liste des plus courts chemins.
@@ -653,109 +654,53 @@ En ligne 1, le noeud 1 reçoit la sonde de 0. Comme il n'a aucun autre voisin, i
 __Résultat__\
 <span style="color:green">Succès</span>
 
-## Conception de la liste des chemins sur la première sonde (1).
+### Fusion correcte des topologies
 __Description__\
-Lorsque le noeud reçoit sa première sonde. Il n'a pas encore connaissance des plus courts chemins partielles. De ce fait, il se fabrique un tableau base sur le contenu de la sonde
+Lorsque un serveur reçoit une sonde ou un écho, il met à jour sa matrice d'adjacence.
 
-Ce phénomène arrive sur le noeud 1.
-
-`1 DEBUG >> Dec 31 18:11:43 RECEIVED) probe 0 0`\
-0_\
-0-1_\
-0-2_\
-0-3_\
-N_\
-N_\
-N_\
-N `from 0`\
-`2 DEBUG >> Dec 31 18:11:44 SENDED) probe 0 1`\
-0_\
-0-1_\
-0-2_\
-0-3_\
-N_\
-N_\
-N_\
-0-1-7 `to 7`\
+Nous allons analyser 4 lignes de la console 6\
+`[ligne omise]`\
+`3 DEBUG >> Dec 31 22:12:22 SENDED) probe 0 6`\
+ 0-1-1-1-0-0-0-0_\
+ 1-0-0-0-0-0-0-1_\
+ 0-0-0-0-0-0-0-0_\
+ 0-0-0-0-0-0-0-0_\
+ 0-0-0-0-0-0-0-0_\
+ 0-0-0-0-0-0-0-0_\
+ 0-0-0-1-0-1-0-1_\
+ 0-1-0-0-0-0-1-0 `to 5`\
+`4 DEBUG >> Dec 31 22:12:22 RECEIVED) echo 0 5`\
+0-1-1-1-0-0-0-0_\
+1-0-0-0-0-0-0-1_\
+0-0-0-0-0-0-0-0_\
+1-0-0-0-1-1-1-0_\
+0-0-0-0-0-0-0-0_\
+0-0-0-1-0-0-1-0_\
+0-0-0-1-0-1-0-1_\
+0-1-0-0-0-0-1-0 `from 5`\
+`5 DEBUG >> Dec 31 22:12:22 RECEIVED) probe 0 3`
+0-1-1-1-0-0-0-0_\
+0-0-0-0-0-0-0-0_\
+0-0-0-0-0-0-0-0_\
+1-0-0-0-1-1-1-0_\
+0-0-0-0-0-0-0-0_\
+0-0-0-0-0-0-0-0_\
+0-0-0-0-0-0-0-0_\
+0-0-0-0-0-0-0-0 `from 3`\
+`6 DEBUG >> Dec 31 22:12:22 SENDED) echo 0 6`
+ 0-1-1-1-0-0-0-0_\
+ 1-0-0-0-0-0-0-1_\
+ 0-0-0-0-0-0-0-0_\
+ 1-0-0-0-1-1-1-0_\
+ 0-0-0-0-0-0-0-0_\
+ 0-0-0-1-0-0-1-0_\
+ 0-0-0-1-0-1-0-1_\
+ 0-1-0-0-0-0-1-0 `to 7`\
 `[Résultat final omis]`
 
-En ligne 1, le noeud 1 reçoit la sonde de 0 avec sa liste des plus courts chemin. Comme il n'en a pas encore, il se l'approprie et la modifie. Comme le montre la ligne 2, le noeud 1 a ajouté le chemin jusqu'au noeud 7 car c'est un voisin de 1 et pas de 0. Le noeud 0 n'avait aucune connaissance du plus court chemin jusqu'au noeud 7
+Comme nous pouvons le voir, les matrices reçues en lignes 4 et 5 ont correctement été fusionnées avec la première matrice locale envoyée en ligne 3.
 
-__Résultat__\
-<span style="color:green">Succès</span>
-
-## Conception de la liste des chemins sur la première sonde (2).
-__Description__\
-Lorsque le noeud reçoit sa première sonde. Il n'a pas encore connaissance des plus courts chemins partielles. De ce fait, il se fabrique un tableau base sur le contenu de la sonde. 
-
-Contrairement au test précédent, un plus court existe déjà sur un des voisins.
-
-Ce phénomène arrive sur le noeud 5.
-
-`1 DEBUG >> Dec 31 18:11:44 RECEIVED) probe 0 3`\
-0_\
-0-1_\
-0-2_\
-0-3_\
-0-3-4_\
-0-3-5_\
-0-3-6_\
-N `from 3`\
-`2 DEBUG >> Dec 31 18:11:44 SENDED) probe 0 5 `\
-0_\
-0-1_\
-0-2_\
-0-3_\
-0-3-4_\
-0-3-5_\
-0-3-6_\
-N ` to 6`\
-`[Résultat final omis]`
-
-En ligne 1, le noeud 5 reçoit la sonde de 3 avec sa liste des plus courts chemin. Comme il n'en a pas encore, il se l'approprie et tente de la modifier. Comme le montre la ligne 2, le noeud 5 n'a pas ajouté son chemin jusqu'au noeud 6 car le noeud 3 connaissait déjà un plus court chemin.
-
-__Résultat__\
-<span style="color:green">Succès</span>
-
-## Fusion des listes des chemins.
-__Description__\
-Lorsqu'un noeud reçoit un écho ou une seconde sonde, il tente de mettre à jour sa liste si la liste reçue contient des plus courts chemins
-
-Ce phénomène arrive sur le noeud 6.
-
-`[Logs omis]`
-`3 DEBUG >> Dec 31 18:11:44 SENDED) probe 0 6`\
- 0_\
- 0-1_\
- 0-2_\
- 0-3_\
- 0-3-4_\
- 0-3-5_\
- 0-3-6_\
- 0-3-6-7 `to 7`\
-`4 DEBUG >> Dec 31 18:11:44 RECEIVED) probe 0 7 `\
-0_\
-0-1_\
-0-2_\
-0-3_\
-N_\
-N_\
-0-1-7-6_\
-0-1-7 `from 7`\
-`[Log omis]`
-`6 DEBUG >> Dec 31 18:11:44 SENDED) echo 0 6 `\
-0_\
-0-1_\
-0-2_\
-0-3_\
-0-3-4_\
-0-3-5_\
-0-3-6_\
-0-1-7 `to 3`\
-`[Résultat final omis]`
-
-En ligne 3, nous voyons la liste des plus courts chemin en 6. En ligne 4, le noeud 7 a envoyé sa liste des plus courts chemin. À ce moment, le noeud 6 doit mettre à jour sa liste. Les chemin jusqu'aux noeuds 0-1-2-3 ne changent pas. Le noeud 7 n'a pas connaissance des plus courts chemins jusqu'aux noeuds 4 et 5, le noeud 6 n'en tient pas compte. Le noeud 7 connait un chemin jusqu'au noeud 6 mais ce n'est pas plus court que celui que le noeud 6 a déjà. Finalement, le noeud 7 connait un chemin jusqu'à lui plus court que celui connu par le noeud 6, il est donc mis à jours.
-Comme le montre la ligne 6, le noeud 6 a mis à jours ses plus courts chemins correctement. 
+Matrice ligne 2 || Matrice ligne 3 || Matrice ligne 4 = Matrice ligne 5
 
 __Résultat__\
 <span style="color:green">Succès</span>

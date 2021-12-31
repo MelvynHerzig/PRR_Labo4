@@ -16,9 +16,6 @@ const (
 	TypeEcho = "echo"
 )
 
-// unknown is the character used to serialize an unknow path to a given node
-const unknown = "N"
-
 // message is the type of struct that is sent between servers during the research.
 type message struct {
 	mType string // Node topology
