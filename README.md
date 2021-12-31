@@ -278,7 +278,7 @@ __Résultat__\
 
 ## Protocole UDP des ondes
 Les ondes échangées antres les serveurs ont le format suivant:\
-\<matrice d'adjacence> <numéro du serveur source> <numéro de la vague> \<source active>
+\<matrice d'adjacence> <numéro du serveur source> <numéro de la onde> \<source active>
 
 Par exemple, si le serveur 2 émet sa troisième onde, il n'est plus actif et possède la matrice d'adjacence:
 ```
@@ -294,3 +294,137 @@ Le message sérialisé sera "0-1-0_1-0-1_0-1-0 2 3 0"
 > Les colonnes de la matrice sont séparées par des '-'
 
 > Les messages ne doivent pas excéder 1024 bytes. Il n'est pas conseillé de faire un réseau avec plus de 20 noeuds
+
+## Tests
+Les tests ont été réalisés avec la fichier de configuration de ce readme.
+
+Pour ces tests nous n'allons pas analyser la sortie de toutes les consoles. Nous allons nous concentrer sur des situations spécifiques 
+
+Pour les réceptions, les heures affichées sont les heures de traitement et non pas l'heure effective de la réception.
+### Les ondes sont straitées séquentiellement
+__Description__\
+Les ondes doivent être traitées les unes à la suite des autres, sans chevauchement, indépendament de la vitesse de chaque noeud.
+
+Ce test vise à tester la mise en cache des ondes reçues mais qui ne doivent pas être encore traîtées à cette itération.
+
+Nous allons analyser la sortie de la console 6  
+`1  DEBUG >> Dec 31 16:07:52 SENDED) [matrice omise] 6 1 1`\
+`2  DEBUG >> Dec 31 16:07:52 SENDED) [matrice omise] 6 1 1`\
+`3  DEBUG >> Dec 31 16:07:52 SENDED) [matrice omise] 6 1 1`\
+`4  DEBUG >> Dec 31 16:07:52 RECEIVED) [matrice omise] 5 1 1`\
+`5  DEBUG >> Dec 31 16:07:52 RECEIVED) [matrice omise] 3 1 1`\
+`6  DEBUG >> Dec 31 16:07:52 RECEIVED) [matrice omise] 7 1 1`\
+`7  DEBUG >> Dec 31 16:07:52 SENDED) [matrice omise] 6 2 1`\
+`8  DEBUG >> Dec 31 16:07:52 SENDED) [matrice omise] 6 2 1`\
+`9  DEBUG >> Dec 31 16:07:52 SENDED) [matrice omise] 2 1`\
+`10 DEBUG >> Dec 31 16:07:52 RECEIVED) [matrice omise] 3 2 1`\
+`11 DEBUG >> Dec 31 16:07:52 RECEIVED) [matrice omise] 5 2 1`\
+`12 DEBUG >> Dec 31 16:07:52 RECEIVED) [matrice omise] 7 2 1`\
+`13 DEBUG >> Dec 31 16:07:52 SENDED) [matrice omise] 6 3 1`\
+`14 DEBUG >> Dec 31 16:07:52 SENDED) [matrice omise] 6 3 1`\
+`15 DEBUG >> Dec 31 16:07:52 SENDED) [matrice omise] 6 3 1`\
+`16 DEBUG >> Dec 31 16:07:52 RECEIVED) [matrice omise] 5 3 1`\
+`17 DEBUG >> Dec 31 16:07:52 RECEIVED) [matrice omise] 7 3 1`\
+`18 DEBUG >> Dec 31 16:07:52 RECEIVED) [matrice omise] 3 3 0`\
+`19 DEBUG >> Dec 31 16:07:52 SENDED) [matrice omise] 6 4 0`\
+`20 DEBUG >> Dec 31 16:07:52 SENDED) [matrice omise] 6 4 0`\
+`21 DEBUG >> Dec 31 16:07:52 RECEIVED) [matrice omise] 7 4 0`\
+`22 DEBUG >> Dec 31 16:07:52 RECEIVED) [matrice omise] 5 4 0`\
+`[Résultat final omis]`
+
+> Pour rappel, l'avant dernier numéro représente le numéro de l'onde.
+
+Comme nous pouvons le voir, par exemple, aux lignes 4-5-6 ou 10-11-12 les ondes ne se chevauchent pas. Le serveur attend d'avoir reçu une onde correspondant à l'onde locale en cours avant de passer à l'onde suivante.
+
+Pour effectuer ce test, nous avons volontairement ralenti le server 5. Ce qui a laissé aux serveurs 3 et 7 l'opportunité de potentiellement voler la place du serveur 5 durant l'onde en cours.
+
+__Résultat__\
+<span style="color:green">Succès</span>
+
+### Les ondes sont straitées séquentiellement
+__Description__\
+Si un serveur se désigne comme inactif, il ne reçoit et n'émet plus de messages à la prochaine onde.
+
+Nous allons analyser la sortie de la console 6  
+`1  DEBUG >> Dec 31 16:07:52 SENDED) [matrice omise] 6 1 1`\
+`2  DEBUG >> Dec 31 16:07:52 SENDED) [matrice omise] 6 1 1`\
+`3  DEBUG >> Dec 31 16:07:52 SENDED) [matrice omise] 6 1 1`\
+`4  DEBUG >> Dec 31 16:07:52 RECEIVED) [matrice omise] 5 1 1`\
+`5  DEBUG >> Dec 31 16:07:52 RECEIVED) [matrice omise] 3 1 1`\
+`6  DEBUG >> Dec 31 16:07:52 RECEIVED) [matrice omise] 7 1 1`\
+`7  DEBUG >> Dec 31 16:07:52 SENDED) [matrice omise] 6 2 1`\
+`8  DEBUG >> Dec 31 16:07:52 SENDED) [matrice omise] 6 2 1`\
+`9  DEBUG >> Dec 31 16:07:52 SENDED) [matrice omise] 2 1`\
+`10 DEBUG >> Dec 31 16:07:52 RECEIVED) [matrice omise] 3 2 1`\
+`11 DEBUG >> Dec 31 16:07:52 RECEIVED) [matrice omise] 5 2 1`\
+`12 DEBUG >> Dec 31 16:07:52 RECEIVED) [matrice omise] 7 2 1`\
+`13 DEBUG >> Dec 31 16:07:52 SENDED) [matrice omise] 6 3 1`\
+`14 DEBUG >> Dec 31 16:07:52 SENDED) [matrice omise] 6 3 1`\
+`15 DEBUG >> Dec 31 16:07:52 SENDED) [matrice omise] 6 3 1`\
+`16 DEBUG >> Dec 31 16:07:52 RECEIVED) [matrice omise] 5 3 1`\
+`17 DEBUG >> Dec 31 16:07:52 RECEIVED) [matrice omise] 7 3 1`\
+`18 DEBUG >> Dec 31 16:07:52 RECEIVED) [matrice omise] 3 3 0`\
+`19 DEBUG >> Dec 31 16:07:52 SENDED) [matrice omise] 6 4 0`\
+`20 DEBUG >> Dec 31 16:07:52 SENDED) [matrice omise] 6 4 0`\
+`21 DEBUG >> Dec 31 16:07:52 RECEIVED) [matrice omise] 7 4 0`\
+`22 DEBUG >> Dec 31 16:07:52 RECEIVED) [matrice omise] 5 4 0`
+`[Résultat final omis]`
+
+> Pour rappel, l'antépénultième et dernier nombres sont respectivement le serveur source et son état (actif ou non)
+
+Comme nous pouvons le voir à la ligne 18, le serveur 3 s'annonce innactif. Le serveur 6 ne lui envoie plus de message (lignes 19 et 20) et il n'attend pas de recevoir ses messages pour continuer son exécution (lignes 21 et 22).
+
+__Résultat__\
+<span style="color:green">Succès</span>
+
+### Fusion correcte des topologie
+__Description__\
+Le serveur modifie correctement sa topologie avec les informations reçues.
+
+Nous allons analyser 4 lignes de la console 7 
+`1 [ligne omise]`\
+`2 DEBUG >> Dec 31 16:07:52 SENDED)`\
+0-0-0-0-0-0-0-0_\
+0-0-0-0-0-0-0-0_\
+0-0-0-0-0-0-0-0_\
+0-0-0-0-0-0-0-0_\
+0-0-0-0-0-0-0-0_\
+0-0-0-0-0-0-0-0_\
+0-0-0-0-0-0-0-0_\
+0-1-0-0-0-0-1-0 `[fin omises]`\
+`3 DEBUG >> Dec 31 16:07:52 RECEIVED)`\
+0-0-0-0-0-0-0-0_\
+1-0-0-0-0-0-0-1_\
+0-0-0-0-0-0-0-0_\
+0-0-0-0-0-0-0-0_\
+0-0-0-0-0-0-0-0_\
+0-0-0-0-0-0-0-0_\
+0-0-0-0-0-0-0-0_\
+0-0-0-0-0-0-0-0 `[fin omises]`\
+`4 DEBUG >> Dec 31 16:07:52 RECEIVED)`\
+0-0-0-0-0-0-0-0_\
+0-0-0-0-0-0-0-0_\
+0-0-0-0-0-0-0-0_\
+0-0-0-0-0-0-0-0_\
+0-0-0-0-0-0-0-0_\
+0-0-0-0-0-0-0-0_\
+0-0-0-1-0-1-0-1_\
+0-0-0-0-0-0-0-0 `[fin omises]`\
+`5 DEBUG >> Dec 31 16:07:52 SENDED)`\
+0-0-0-0-0-0-0-0_\
+1-0-0-0-0-0-0-1_\
+0-0-0-0-0-0-0-0_\
+0-0-0-0-0-0-0-0_\
+0-0-0-0-0-0-0-0_\
+0-0-0-0-0-0-0-0_\
+0-0-0-1-0-1-0-1_\
+0-1-0-0-0-0-1-0 `[fin omises]`\
+`[lignes omises]`\
+`[Résultat final omis]`
+
+Comme nous pouvons le voir, les matrices reçues en lignes 3 et 4 ont correctement été fusionnées avec la première matrice locale envoyée en ligne 2.
+
+Matrice ligne 2 || Matrice ligne 3 || Matrice ligne 4 = Matrice ligne 5
+
+__Résultat__\
+<span style="color:green">Succès</span>
