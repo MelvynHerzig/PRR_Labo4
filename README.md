@@ -678,7 +678,7 @@ Nous allons analyser 4 lignes de la console 6\
 0-0-0-1-0-0-1-0_\
 0-0-0-1-0-1-0-1_\
 0-1-0-0-0-0-1-0 `from 5`\
-`5 DEBUG >> Dec 31 22:12:22 RECEIVED) probe 0 3`
+`5 DEBUG >> Dec 31 22:12:22 RECEIVED) probe 0 3`\
 0-1-1-1-0-0-0-0_\
 0-0-0-0-0-0-0-0_\
 0-0-0-0-0-0-0-0_\
@@ -687,7 +687,7 @@ Nous allons analyser 4 lignes de la console 6\
 0-0-0-0-0-0-0-0_\
 0-0-0-0-0-0-0-0_\
 0-0-0-0-0-0-0-0 `from 3`\
-`6 DEBUG >> Dec 31 22:12:22 SENDED) echo 0 6`
+`6 DEBUG >> Dec 31 22:12:22 SENDED) echo 0 6`\
  0-1-1-1-0-0-0-0_\
  1-0-0-0-0-0-0-1_\
  0-0-0-0-0-0-0-0_\
