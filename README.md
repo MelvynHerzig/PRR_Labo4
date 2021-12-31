@@ -28,7 +28,7 @@ Pour l'algorithme ondulatoire, si une demande est en cours d'exécution (tous le
 
 Le réseau est considéré sans panne, sans erreur et ne change pas au fil du temps. Dans une situation réelle, ces éléments devraient être pris en compte.
 
-# Protocole de communication UDP de démarrage des serveurs
+# Protocole de communication UDP de démarrage des serveurs (serveur - serveur)
 Nous avons mis en place un protocole de démarrage des serveurs. Les serveurs doivent s'attendre avant de démarrer le traitement des demandes.
 
 Durant le protocole de démarrage uniquement, tous les messages sont acquittés. Si aucun acquittement n'est reçu après 1s, le message est re-envoyé. 
@@ -77,6 +77,103 @@ Server 3 -> 2 : <br>
 `GO`\
 Server 2 -> 3 :\
 `ACK`\
+
+## Tests
+Les tests ont été réalisés avec la fichier de configuration de ce readme.
+### Attente des serveurs non démarrés
+__Description__\
+Les serveurs attendent que tous les serveurs soient démarrés avant d'accepter les demandes. Les serveur démarrés affichent:\
+![l1](https://user-images.githubusercontent.com/34660483/147829116-e89c04c5-c6b0-499c-aca3-84846f42691c.png)\
+__Résultat__\
+<span style="color:green">Succès</span>
+
+### Les serveurs s'attendent avant de démarrer
+__Description__\
+Les serveurs sont démarrées dans un ordre aléatoire. Après un instant tous affichent:\
+![cmd](https://user-images.githubusercontent.com/34660483/147826831-11b7c10d-1aa8-401a-ac24-50f55c371e9e.png)\
+__Résultat__\
+<span style="color:green">Succès</span>
+
+### Un message indésiré ne perturbe pas le processus de démarrage
+__Description__\
+Lors du démarrage le client de l'algorithme ondulatoire est démarré, il envoie "START" à tout les serveurs. Les serveurs ignorent le message et démarrent correctement\
+__Résultat__\
+<span style="color:green">Succès</span>
+
+# Protocole de communication UDP de lancement d'une demande (client - serveur)
+Ce protocole est utilisé par le client pour démarrer une recherche des plus courts chemins
+
+## Comment le client trouve le(s) serveur(s) (adresses et ports)?
+Le client interroge le fichier _config.json_.
+
+## Qui parle et quand ? 
+Le client envoie le message "EXEC" au(x) serveur(s). Si l'algorithme configuré est ondulatoire, le client contacte tous les serveurs. Sinon si l'algorithme est sondes et échos, il contacte le serveur reçu en paramètre.
+
+Le client attend une seconde de recevoir un "ACK", sinon la demande est renouvelée.
+
+## Qu'est ce qui se passe quand le message est reçu par le serveur ? 
+Si le serveur démarre, le message est ignoré, sinon il acquitte le message et transmet le message au processus d'exécution de l'algorithme.
+
+> Le message peut être ignoré par le processus d'exécution de l'algorithme si une demande est déjà en cours de traitement.
+
+## Syntaxe des messages de réplication
+### Requête
+| Utilité | Syntaxe |
+|---|----|
+| Effectuer une demande | "EXEC" CRLF |
+| Acquitter |"ACK" CRLF  |
+
+## Exemple d'une conversation entre un client et 3 serveurs (algorithme ondulatoire)
+
+Client -> Server 1:\
+`EXEC`\
+Server 1 -> Client:\
+`ACK`\
+Client -> Server 2:\
+`EXEC`
+
+_Pas de ack après une seconde_
+
+Client -> Server 2:\
+`EXEC`\
+Server 2 -> Client:\
+`ACK`\
+Client -> Server 3:\
+`EXEC`\
+Server 3 -> Client:\
+`ACK`
+
+## Exemple d'une conversation entre un client et un serveur (algorithme sondes et échos)
+
+Client -> Server 5:\
+`EXEC`
+
+_Pas de ack après une seconde_
+
+Client -> Server 5:\
+`EXEC`\
+Server 5 -> Client:\
+`ACK`
+
+## Tests
+Les tests ont été réalisés avec la fichier de configuration de ce readme.
+### Réitération de la demande
+__Description__\
+Si un serveur n'acquitte pas la demande, cette dernière est réitérée\
+__Résultat__\
+<span style="color:green">Succès</span>
+
+### Contacte tous les serveurs avec l'algorithme ondulatoire
+__Description__\
+Si l'algorithme configuré est ondulatoire, le client ne termine pas avant d'avoir pû transmettre sa demande à tous les serveurs.\
+__Résultat__\
+<span style="color:green">Succès</span>
+
+### Contacte du serveur désigné avec l'algorithme sondes et échos
+__Description__\
+Si l'algorithme configuré est sondes et échos, le client ne termine pas avant d'avoir pû transmettre sa demande au serveur désigné en argument.\
+__Résultat__\
+<span style="color:green">Succès</span>
 
 # Première partie: algorithme ondulatoire
 
@@ -178,3 +275,22 @@ Server 2 -> 3 :\
 > Par exemple, le résultat du serveur 0 dans la config de ce _readme_:\
 > ![sp](https://user-images.githubusercontent.com/34660483/147827174-952960be-977a-4ef6-bbaf-9a0b4a573055.png)
 > 
+
+## Protocole UDP des ondes
+Les ondes échangées antres les serveurs ont le format suivant:\
+\<matrice d'adjacence> <numéro du serveur source> <numéro de la vague> \<source active>
+
+Par exemple, si le serveur 2 émet sa troisième onde, il n'est plus actif et possède la matrice d'adjacence:
+```
+[false, true, false]
+[true, false, true]
+[false, true, false]
+```
+Le message sérialisé sera "0-1-0_1-0-1_0-1-0 2 3 0"
+> Les booléens sont traduits en 0 (=false) et 1 (=vrai)
+
+> Les lignes de la matrice sont séparées par des '_'
+
+> Les colonnes de la matrice sont séparées par des '-'
+
+> Les messages ne doivent pas excéder 1024 bytes. Il n'est pas conseillé de faire un réseau avec plus de 20 noeuds
