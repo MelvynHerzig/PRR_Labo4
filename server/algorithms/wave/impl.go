@@ -9,7 +9,7 @@ import (
 
 // reset creates and return the base structures to the shortest path resolution, such has:
 // the topology, the array of active neighbors and the active neighbors count.
-func reset() ([][]bool, []bool, uint){
+func reset() (*[][]bool, []bool, uint){
 
 	var topology [][]bool
 	var activeNeighbors []bool
@@ -26,7 +26,7 @@ func reset() ([][]bool, []bool, uint){
 	// Set the active neighbors count
 	activeNeighborsCount = common.NeighborsCount
 
-	return topology, activeNeighbors, activeNeighborsCount
+	return &topology, activeNeighbors, activeNeighborsCount
 }
 
 // searchSP is a function launched in a goroutine by the handler when he receives a "EXEC" message.
@@ -39,12 +39,12 @@ func searchSP() {
 
 	for {
 		wave++
-		sendToActiveNeighbors(& message{topology: topology, src: common.LocalNumber, wave: wave, active: true}, &activeNeighbors)
+		sendToActiveNeighbors(& message{topology: *topology, src: common.LocalNumber, wave: wave, active: true}, &activeNeighbors)
 
 		// Collecting wave response
 		for i := uint(0); i < activeNeighborsCount; i++ {
 			m := receiveMessage(wave)
-			common.UpdateTopology(&topology, &m.topology)
+			common.UpdateTopology(topology, &m.topology)
 			activeNeighbors[m.src] = m.active
 			if !m.active {
 				activeNeighborsCount--
@@ -52,20 +52,20 @@ func searchSP() {
 		}
 
 		// Do we know a path to every node ?
-		if isTopologyComplete(&topology) {
+		if isTopologyComplete(topology) {
 			break
 		}
 	}
 
 	// Sending final wave
 	wave++
-	sendToActiveNeighbors(& message{topology: topology, src: common.LocalNumber, wave: wave, active: false}, &activeNeighbors)
+	sendToActiveNeighbors(& message{topology: *topology, src: common.LocalNumber, wave: wave, active: false}, &activeNeighbors)
 	for i := uint(0); i < activeNeighborsCount; i++ {
 		_ = receiveMessage(wave)
 	}
 
 	// Printing result
-	common.PrintSP(&topology, common.LocalNumber)
+	common.PrintSP(topology, common.LocalNumber)
 
 	// Setting to false in order to restart if necessary
 	common.Running = false
