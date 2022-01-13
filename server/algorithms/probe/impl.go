@@ -11,33 +11,21 @@ import (
 const maxUint = ^uint(0)
 
 // startExecution is launched when a new shortest path search is asked. One at a time.
-func startExecution() (map[uint]uint, [][]bool, map[uint]uint) {
-	ids := make(map[uint]uint)
-	ids[common.LocalNumber] = common.NeighborsCount
-
-	topology := common.ComputeBaseTopology()
-
-	parents := make(map[uint]uint)
-
+// Sends a probe to every neighbor. Set expected answer.
+func startExecution(ids *[]uint, parents *[]uint, topology *[][]bool) {
 	// Sending probe to all neighbors
-	sendToNeighbors(&message{mType: TypeProbe, id: common.LocalNumber, src: common.LocalNumber, topology: topology})
+	sendToNeighbors(&message{mType: TypeProbe, id: common.LocalNumber, src: common.LocalNumber, topology: *topology})
 
-	return ids, topology, parents
+	(*ids)[common.LocalNumber] = common.NeighborsCount
+	(*parents)[common.LocalNumber] = common.LocalNumber
 }
 
-// handleProbe handles a probe (message m) updates map ids of response count left, adjacency matrix and
+// handleProbe handles a probe (message m) updates array ids of response count left, adjacency matrix and
 // first parent for a given request id
-func handleProbe(m *message, ids *map[uint]uint, topology *[][]bool, parents *map[uint]uint) {
+func handleProbe(m *message, ids *[]uint, topology *[][]bool, parents *[]uint) {
 
-	// if ids is nil, we are not the "root" so we need to set the base struct.
-	if *ids == nil {
-		*ids = make(map[uint]uint)
-		*parents = make(map[uint]uint)
-	}
-
-	_, ok := (*ids)[m.id]
 	// if response left count is existing, we handle like an echo (circular graph)
-	if ok {
+	if (*ids)[m.id] > 0 {
 		handleEcho(m, ids, topology, parents)
 
 	// else first time we receive prob with this id
@@ -53,31 +41,28 @@ func handleProbe(m *message, ids *map[uint]uint, topology *[][]bool, parents *ma
 }
 
 // handleEcho decrease needed answers count left for the given message id and checks if over
-func handleEcho(m *message, ids *map[uint]uint, topology *[][]bool, parents *map[uint]uint) {
-
+func handleEcho(m *message, ids *[]uint, topology *[][]bool, parents *[]uint) {
 	common.UpdateTopology(topology, &m.topology)
 
-	cnt, _ := (*ids)[m.id]
-	(*ids)[m.id] = cnt - 1
+	(*ids)[m.id] -= 1
 
 	checkAndEchoIfOver(m, ids, topology, parents)
 }
 
 // checkAndEchoIfOver if answers count hits 0, send an echo to original parent.
-func checkAndEchoIfOver(m *message, ids *map[uint]uint, topology *[][]bool, parents *map[uint]uint) {
+func checkAndEchoIfOver(m *message, ids *[]uint, topology *[][]bool, parents *[]uint) {
 	if (*ids)[m.id] == 0 {
+
 		str := serialize(&message{mType: TypeEcho, id:m.id, src: common.LocalNumber, topology: *topology})
 
-		if parent, ok := (*parents)[m.id]; ok {
-			debug.LogSend(str + " to " + fmt.Sprintf("%v", parent))
-			network.SendToServer(str, parent)
+		if (*parents)[m.id] != common.LocalNumber {
+			debug.LogSend(str + " to " + fmt.Sprintf("%v", (*parents)[m.id]))
+			network.SendToServer(str, (*parents)[m.id])
 		}
 
 		common.PrintSP(topology, m.id)
-		delete(*ids, m.id)
-		delete(*parents, m.id)
-		*topology = nil
 		common.Running = false
+		*topology = common.ComputeBaseTopology() // Reset for a new iteration
 	}
 }
 

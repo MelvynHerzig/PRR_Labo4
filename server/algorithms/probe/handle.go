@@ -15,13 +15,20 @@ import (
 func Handle() {
 
 	// Adjacency matrix, updated at each echo and probe
-	var topology [][]bool
+	// Adjacency matrix i at topologies [i] is the matrix used when the server i handle a client demand
+	// Reset after each end.
+	var topologies = make([][][]bool, common.ServerCount)
+	for i := uint(0); i < common.ServerCount; i++ {
+		topologies[i] = common.ComputeBaseTopology()
+	}
 
-	// Map that holds the response count to get before sending echo back to parent for a given message (id is the key)
-	var ids map[uint]uint
+	// Array that holds the response count to get before sending echo back to parent for a given message (id is the key)
+	// ids[i] is expected amount of answers where m.id = i
+	var ids = make([]uint, common.ServerCount)
 
-	// Map that holds the parent to send the echo when all response are received
-	var parents map[uint]uint
+	// Array that holds the parent to send the echo when all response are received. parents[i] is parent to answer
+	// where m.id = i
+	var parents = make([]uint, common.ServerCount)
 
 	for {
 		select {
@@ -31,7 +38,7 @@ func Handle() {
 			// If start execution signal and not already running
 			if data.Message == network.SignalExec && !common.Running {
 				common.Running = true
-				ids, topology, parents = startExecution()
+				startExecution(&ids, &parents, &topologies[common.LocalNumber])
 
 			// Else if it's a message from another server, it's a probe/echo message, so we handle it.
 			} else if config.IsServerIP(data.Sender) {
@@ -42,9 +49,9 @@ func Handle() {
 				debug.LogReceive(data.Message + " from " + fmt.Sprintf("%v", m.src))
 				switch m.mType {
 				case TypeEcho :
-					handleEcho(&m, &ids, &topology, &parents)
+					handleEcho(&m, &ids, &topologies[m.id], &parents)
 				case TypeProbe :
-					handleProbe(&m, &ids, &topology, &parents)
+					handleProbe(&m, &ids, &topologies[m.id], &parents)
 				}
 
 			}
