@@ -2,6 +2,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net"
 	"os"
@@ -35,8 +36,8 @@ func main() {
 	}
 
 	// Resolving UDP Server.
-	port := config.GetServerById(config.GetLocalServerNumber()).Port
-	addr, _ := net.ResolveUDPAddr("udp", "localhost:" + strconv.FormatUint(uint64(port), 10))
+	server := config.GetServerById(config.GetLocalServerNumber())
+	addr, _ := net.ResolveUDPAddr("udp", fmt.Sprintf("%v:%v", server.Ip, server.Port))
 
 	network.WaitNetwork(addr)
 

@@ -42,7 +42,7 @@ func searchSP() {
 		sendToActiveNeighbors(& message{topology: topology, src: common.LocalNumber, wave: wave, active: true}, &activeNeighbors)
 
 		// Collecting wave response
-		for i := uint(0); i < common.NeighborsCount; i++ {
+		for i := uint(0); i < activeNeighborsCount; i++ {
 			m := receiveMessage(wave)
 			common.UpdateTopology(&topology, &m.topology)
 			activeNeighbors[m.src] = m.active

@@ -31,7 +31,7 @@ func Handle() {
 					go searchSP()
 
 				// Else if it's a message from another server, it's a wave message, so we handle it.
-				} else if config.IsServerIP(data.Sender) && common.Running {
+				} else if config.IsServerIP(data.Sender) {
 
 					// Sometimes the process has not yet started and already receive waves. If this is the case, we
 					// store the message until the process has started.
@@ -41,7 +41,6 @@ func Handle() {
 					} else {
 						cachedMessages.PushBack(&m)
 					}
-
 				}
 		}
 	}

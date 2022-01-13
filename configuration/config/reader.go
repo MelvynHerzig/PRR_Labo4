@@ -83,15 +83,6 @@ func GetServerById(id uint) *Server {
 	return &reader.Servers[id]
 }
 
-// GetServerRandomly Returns a server from the servers list
-func GetServerRandomly() *Server {
-	if reader == nil {
-		log.Fatal("config not initialized")
-	}
-
-	return GetServerById(uint(rand.Intn(len(reader.Servers))))
-}
-
 // GetServers Returns all servers from the list
 func GetServers() []Server {
 	if reader == nil {

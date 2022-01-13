@@ -26,6 +26,7 @@ var NeighborsCount uint
 // false by respective algorithms implementations. It only prevents from a local double execution, not from another node.
 var Running = false
 
+// InitVariables Initializes the common variables.
 func InitVariables() {
 	LocalNumber = config.GetLocalServerNumber()
 	ServerCount = uint(len(config.GetServers()))

@@ -2,6 +2,12 @@ package common
 
 import "strings"
 
+const rowSep = "_"
+const colSep = "-"
+const isNeighbor = "1"
+const notNeighbor = "0"
+
+
 // SerializeTopology translate an adjacency matrix to a string
 // For example, if the matrix is [false, true, false]
 //								 [true, false, true]
@@ -12,16 +18,16 @@ func SerializeTopology(matrix *[][]bool) string{
 	var strTopo string
 	for i := range *matrix {
 		if i > 0 {
-			strTopo += "_"
+			strTopo += rowSep
 		}
 		for j := range (*matrix)[i] {
 			if j > 0 {
-				strTopo += "-"
+				strTopo += colSep
 			}
 			if (*matrix)[i][j] {
-				strTopo += "1"
+				strTopo += isNeighbor
 			} else {
-				strTopo += "0"
+				strTopo += notNeighbor
 			}
 		}
 	}
@@ -41,11 +47,11 @@ func DeserializeTopology(str string) [][]bool {
 		topology[i] = make([]bool, ServerCount)
 	}
 
-	rows := strings.Split(str, "_")
+	rows := strings.Split(str, rowSep)
 	for i := range rows {
-		values := strings.Split(rows[i], "-")
+		values := strings.Split(rows[i], colSep)
 		for j := range values {
-			if values[j] == "1" {
+			if values[j] == isNeighbor {
 				topology[i][j] = true
 			} else {
 				topology[i][j] = false

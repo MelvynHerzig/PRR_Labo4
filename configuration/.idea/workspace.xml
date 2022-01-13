@@ -5,17 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a7fcdf9d-4c73-46ce-821f-5460a2c94ff9" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/../client/algorithms/wave/client.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../arborescence_servers.png" beforeDir="false" afterPath="$PROJECT_DIR$/../arborescence_servers.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../client/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/../client/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../config.json" beforeDir="false" afterPath="$PROJECT_DIR$/../config.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/config/reader.go" beforeDir="false" afterPath="$PROJECT_DIR$/config/reader.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server/algorithms/wave/handle.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/algorithms/wave/handle.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server/algorithms/wave/impl.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/algorithms/wave/impl.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server/algorithms/wave/seriliazation.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/algorithms/wave/seriliazation.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../server/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server/network/communication.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/network/communication.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
