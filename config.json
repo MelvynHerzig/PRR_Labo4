@@ -1,6 +1,6 @@
 {
   "debug": true,
-  "version": "probe",
+  "version": "wave",
   "servers": [
     {
       "ip": "127.0.0.1",

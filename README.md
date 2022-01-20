@@ -257,7 +257,7 @@ __Résultat__\
 > `$ go run . 6`\
 > `$ go run . 3`
 >
-> Il est également possible de démarrer les serveurs automatiquement avec les scriptes `server/win_start_servers.bat` pour windows ou `server/lin_start_server.sh` pour linux.\
+> Sous Windows, il est également possible de démarrer les serveurs automatiquement avec le scripte `server/win_start_servers.bat`.\
 > \
 > L'ordre de démarrage n'est pas important. Durant cette étape, les serveurs s'inter-connectent. En conséquence, tant que tous ne sont pas allumés et connectés, ils n'acceptent que des connexions ayant une adresse IP source appartenant au fichier de configuration. De plus toute demande initiale sont refusées tant que le réseau n'est pas prêt.\
 >\
@@ -539,7 +539,7 @@ __Résultat__\
 > `$ go run . 6`\
 > `$ go run . 3`
 >
-> Il est également possible de démarrer les serveurs automatiquement avec les scriptes `server/win_start_servers.bat` pour windows ou `server/lin_start_server.sh` pour linux.\
+> Sous windows, il est également possible de démarrer les serveurs automatiquement avec le scripte `server/win_start_servers.bat`.\
 > \
 > L'ordre de démarrage n'est pas important. Durant cette étape, les serveurs s'inter-connectent. En conséquence, tant que tous ne sont pas allumés et connectés, ils n'acceptent que des connexions ayant une adresse IP source appartenant au fichier de configuration. De plus toute demande initiale sont refusées tant que le réseau n'est pas prêt.\
 >\
