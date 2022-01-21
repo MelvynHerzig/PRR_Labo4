@@ -26,9 +26,7 @@ En se basant sur la [donnée](https://github.com/MelvynHerzig/PRR_Labo4/blob/mai
 ## Améliorations possibles
 Pour l'algorithme ondulatoire, si une demande est en cours d'exécution (tous les serveurs ont déjà reçu le signal de départ), aucune autre demande ne peut être démarrée. Toutefois, si deux demandes initiales sont émises en même temps, le comportement est indéfini. 
 
-Pour l'algorithme sondes et échos, seules les doubles demandes locales sont protégées. Il est donc tout à fait possible d'effectuer deux demandes en simultanées sur des noeuds différents. Cela aura un effet indéterminé.
-
-Il faudrait améliorer ces aspects, par exemple avec un mécanisme de section critique.
+Il faudrait améliorer cet aspect, par exemple avec un mécanisme de section critique.
 
 Le réseau est considéré sans panne, sans erreur et ne change pas au fil du temps. Dans une situation réelle, ces éléments devraient être pris en compte.
 
