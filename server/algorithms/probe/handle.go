@@ -35,10 +35,13 @@ func Handle() {
 		// On message
 		case data := <- network.DataChan:
 
-			// If start execution signal and not already running
-			if data.Message == network.SignalExec && !common.Running {
-				common.Running = true
-				startExecution(&ids, &parents, &topologies[common.LocalNumber])
+			// If start execution signal
+			if data.Message == network.SignalExec {
+
+				if !common.Running {
+					common.Running = true
+					startExecution(&ids, &parents, &topologies[common.LocalNumber])
+				}
 
 			// Else if it's a message from another server, it's a probe/echo message, so we handle it.
 			} else if config.IsServerIP(data.Sender) {
