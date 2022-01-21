@@ -1,5 +1,5 @@
 # PRR_Labo4
-Respository du laboratoire 03 pour le cours PRR
+Respository du laboratoire 04 pour le cours PRR
 
 # Étudiants
 - Forestier Quentin
@@ -26,9 +26,7 @@ En se basant sur la [donnée](https://github.com/MelvynHerzig/PRR_Labo4/blob/mai
 ## Améliorations possibles
 Pour l'algorithme ondulatoire, si une demande est en cours d'exécution (tous les serveurs ont déjà reçu le signal de départ), aucune autre demande ne peut être démarrée. Toutefois, si deux demandes initiales sont émises en même temps, le comportement est indéfini. 
 
-Pour l'algorithme sondes et échos, seules les doubles demandes locales sont protégées. Il est donc tout à fait possible d'effectuer deux demandes en simultanées sur des noeuds différents. Cela aura un effet indéterminé.
-
-Il faudrait améliorer ces aspects, par exemple avec un mécanisme de section critique.
+Il faudrait améliorer cet aspect, par exemple avec un mécanisme de section critique.
 
 Le réseau est considéré sans panne, sans erreur et ne change pas au fil du temps. Dans une situation réelle, ces éléments devraient être pris en compte.
 
@@ -738,7 +736,7 @@ Pour ce test, nous avons retiré les liens du noeud 3 et de ses voisins.
 `unknown`\
 `Shortest path to 5, length: 4, Path: 0 -> 1 -> 7 -> 6 -> 5`\
 `Shortest path to 6, length: 3, Path: 0 -> 1 -> 7 -> 6`\
-`Shortest path to 7, length: 2, Path: 0 -> 1 -> 7`\
+`Shortest path to 7, length: 2, Path: 0 -> 1 -> 7`
 
 En conséquence, les noeuds 3 et 4 ne peuvent plus être atteints. Ils sont inconnus sur le résultat final.
 
@@ -746,3 +744,10 @@ __Résultat__\
 <span style="color:green">Succès</span>
 
 
+## Note complémentaire
+
+L'implémentation a été designée de sorte à pouvoir gérer plusieurs demandes simulatanément si elles sont émises par des serveurs différents (c'est à dire si elles ont des identifiants différents).
+
+Comme les identifiants des sondes et échos correspondent au numéro du serveur source initial, chaque serveur intermédiaire stocke l'état spécifique à l'identifiant dans un tableau.
+
+Par exemple, le serveur 0 peut gérer en même temps une demande effectuée par le serveur 1 et le serveur 5.
