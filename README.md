@@ -24,9 +24,6 @@ De plus, nous avons pris la liberté d'ajouter un mécanisme d'attente au démar
 En se basant sur la [donnée](https://github.com/MelvynHerzig/PRR_Labo4/blob/main/Labo_4_PRR_donnee.pdf), tout fonctionne.
 
 ## Améliorations possibles
-Pour l'algorithme ondulatoire, si une demande est en cours d'exécution (tous les serveurs ont déjà reçu le signal de départ), aucune autre demande ne peut être démarrée. Toutefois, si deux demandes initiales sont émises en même temps, le comportement est indéfini. 
-
-Il faudrait améliorer cet aspect, par exemple avec un mécanisme de section critique.
 
 Le réseau est considéré sans panne, sans erreur et ne change pas au fil du temps. Dans une situation réelle, ces éléments devraient être pris en compte.
 
