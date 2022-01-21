@@ -738,7 +738,7 @@ Pour ce test, nous avons retiré les liens du noeud 3 et de ses voisins.
 `unknown`\
 `Shortest path to 5, length: 4, Path: 0 -> 1 -> 7 -> 6 -> 5`\
 `Shortest path to 6, length: 3, Path: 0 -> 1 -> 7 -> 6`\
-`Shortest path to 7, length: 2, Path: 0 -> 1 -> 7`\
+`Shortest path to 7, length: 2, Path: 0 -> 1 -> 7`
 
 En conséquence, les noeuds 3 et 4 ne peuvent plus être atteints. Ils sont inconnus sur le résultat final.
 
