@@ -746,3 +746,10 @@ __Résultat__\
 <span style="color:green">Succès</span>
 
 
+## Note complémentaire
+
+L'implémentation a été designée de sorte à pouvoir gérer plusieurs demandes simulatanément si elles sont émises par des serveurs différents (c'est à dire si elles ont des identifiants différents).
+
+Comme les identifiants des sondes et échos correspondent au numéro du serveur source initial, chaque serveur intermédiaire stocke l'état spécifique à l'identifiant dans un tableau.
+
+Par exemple, le serveur 0 peut gérer en même temps une demande effectuée par le serveur 1 et le serveur 5.
