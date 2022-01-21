@@ -26,9 +26,12 @@ func Handle() {
 			case data := <- network.DataChan:
 
 				// If start execution signal and not already running
-				if data.Message == network.SignalExec && !common.Running {
-					common.Running = true
-					go searchSP()
+				if data.Message == network.SignalExec {
+
+					if !common.Running {
+						common.Running = true
+						go searchSP()
+					}
 
 				// Else if it's a message from another server, it's a wave message, so we handle it.
 				} else if config.IsServerIP(data.Sender) {
